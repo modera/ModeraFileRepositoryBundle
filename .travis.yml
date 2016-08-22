@@ -14,4 +14,4 @@ php:
 
 before_script:
   - composer install
-  - mysql -e 'CREATE DATABASE modera_filerepository_bundle'
+  - mysql -e 'CREATE DATABASE modera_file_repository_bundle'

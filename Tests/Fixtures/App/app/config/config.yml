@@ -19,7 +19,7 @@ doctrine:
         port:     %db_port%
         user:     %db_user%
         password: %db_password%
-        dbname:   modera_filerepository_bundle
+        dbname:   modera_file_repository_bundle
         charset:  UTF8
 
     orm:

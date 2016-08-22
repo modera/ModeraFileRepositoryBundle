@@ -22,7 +22,7 @@ class StoredFileTest extends \PHPUnit_Framework_TestCase
         $context = array('foo');
         $dummyStorageKey = 'storage-key';
 
-        $repository = $this->getMock('Modera\FileRepositoryBundle\Entity\Repository', array(), array(), '', false);
+        $repository = $this->createMock('Modera\FileRepositoryBundle\Entity\Repository', array(), array(), '', false);
         $repository->expects($this->atLeastOnce())
                    ->method('generateStorageKey')
                    ->with($this->equalTo($file), $this->equalTo($context))

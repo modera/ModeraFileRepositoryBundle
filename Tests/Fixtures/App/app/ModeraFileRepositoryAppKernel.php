@@ -3,7 +3,7 @@
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Config\Loader\LoaderInterface;
 
-class AppKernel extends Kernel
+class ModeraFileRepositoryAppKernel extends \Modera\FoundationBundle\Testing\AbstractFunctionalKernel
 {
     public function registerBundles()
     {
@@ -18,26 +18,5 @@ class AppKernel extends Kernel
 
             new Modera\FileRepositoryBundle\ModeraFileRepositoryBundle(),
         );
-    }
-
-    public function registerContainerConfiguration(LoaderInterface $loader)
-    {
-        $loader->load(__DIR__.'/config/config.yml');
-    }
-
-    /**
-     * @return string
-     */
-    public function getCacheDir()
-    {
-        return sys_get_temp_dir().'/ModeraTranslationsBundle/cache';
-    }
-
-    /**
-     * @return string
-     */
-    public function getLogDir()
-    {
-        return sys_get_temp_dir().'/ModeraTranslationsBundle/logs';
     }
 }
