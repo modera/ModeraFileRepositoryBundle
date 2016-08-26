@@ -12,7 +12,7 @@ class UniqidKeyGenerator implements StorageKeyGeneratorInterface
 
     /**
      * @param bool $preserveExtension If this parameter is set to TRUE then when a filename is generated original's file
-     *                                extension will be added to the new filename.
+     *                                extension will be added to the new filename
      */
     public function __construct($preserveExtension = false)
     {

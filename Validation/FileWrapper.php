@@ -28,8 +28,8 @@ class FileWrapper
     protected static $constraints = array();
 
     /**
-     * @param \SplFileInfo $file        A file that is being uploaded to a repository.
-     * @param array        $constraints Instances of \Symfony\Component\Validator\Constraint.
+     * @param \SplFileInfo $file        A file that is being uploaded to a repository
+     * @param array        $constraints Instances of \Symfony\Component\Validator\Constraint
      */
     public function __construct(\SplFileInfo $file, array $constraints = array())
     {
