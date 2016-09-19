@@ -58,7 +58,7 @@ Once low-level filesystem is configured you can create a repository that will ma
     $dummyFile = new \SplFileInfo('dummy-file.txt');
 
     /* @var \Modera\FileRepositoryBundle\Entity\StoredFile $storedFile */
-    $storedFile = $fs->put('my_repository', $dummyFile);
+    $storedFile = $fr->put('my_repository', $dummyFile);
 
 When a physical file is put to a repository its descriptor record is created in database that later you can use
 in your domain logic. For example, having a Doctrine entity which represents a physical may prove useful when you
@@ -83,6 +83,7 @@ When you create a repository you can use these configuration properties to tweak
                      constraint.
  * image_constraint -- Configuration options of [Image](http://symfony.com/doc/current/reference/constraints/Image.html)
                        constraint.
+ * interceptors -- allows to specify additional interceptors to use, values must be service container IDs
 
 ### Command line
 
@@ -95,6 +96,40 @@ Bundle ships commands that allow you to perform some standards operations on you
  * modera:file-repository:list-files
  * modera:file-repository:download-file
  * modera:file-repository:delete-file
+ * modera:file-repository:generate-thumbnails
+ 
+### Thumbnails generation
+
+Bundle contains an interceptor that you can use to have thumbnails automatically generated for images when they
+are stored in a repository, to enable this feature when creating a new repository you need to use
+**modera_file_repository.interceptors.thumbnails_generator.interceptor** interceptor:
+
+    /* @var \Modera\FileRepositoryBundle\Repository\FileRepository $fr */
+    $fr = $container->get('modera_file_repository.repository.file_repository');
+
+    $repositoryConfig = array(
+        'filesystem' => 'local_fs',
+        'interceptors' => [
+            \Modera\FileRepositoryBundle\ThumbnailsGenerator\Interceptor::ID,
+        ],
+        'thumbnail_sizes' => array(
+            array(
+                'width' => 300,
+                'height' => 150
+            ),
+            array(
+                'width' => 32,
+                'height' => 32
+            )
+        )
+    );
+
+    $fr->createRepository('vacation_pictures', $repositoryConfig, 'Pictures from vacation');
+    
+Configuration key "thumbnail_sizes" can be used to specify what thumbnail size you need to have. With this configuration
+whenever a picture is uploaded to a repository alternative will be created, for more details see StoredFile::$alternatives,
+StoredFile::$alternativeOf properties. If you already have a repository and you want to generate thumbnails for it
+then use `modera:file-repository:generate-thumbnails` command.
 
 ## Licensing
 

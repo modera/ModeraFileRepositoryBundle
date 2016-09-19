@@ -5,6 +5,42 @@ namespace Modera\FileRepositoryBundle\Tests\Unit\Entity;
 use Modera\FileRepositoryBundle\Entity\Repository;
 use Modera\FileRepositoryBundle\Entity\StoredFile;
 use Modera\FileRepositoryBundle\Exceptions\InvalidRepositoryConfig;
+use Modera\FileRepositoryBundle\Intercepting\OperationInterceptorInterface;
+
+// there's some glitches in Phake which didn't allow to properly
+// validate several method's invocations in one single tc
+class DummyInterceptor implements OperationInterceptorInterface
+{
+    /**
+     * @var array
+     */
+    public $beforePutInvocations = [];
+
+    /**
+     * @var array
+     */
+    public $onPutInvocations = [];
+
+    /**
+     * @var array
+     */
+    public $afterPutInvocations = [];
+
+    public function beforePut(\SplFileInfo $file, Repository $repository)
+    {
+        $this->beforePutInvocations[] = [$file, $repository];
+    }
+
+    public function onPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository)
+    {
+        $this->onPutInvocations[] = [$storedFile, $file, $repository];
+    }
+
+    public function afterPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository)
+    {
+        $this->afterPutInvocations[] = [$storedFile, $file, $repository];
+    }
+}
 
 /**
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
@@ -27,23 +63,14 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(array(), $thrownException->getConfig());
     }
 
-    private function createInterceptor()
-    {
-        $incp = \Phake::mock('Modera\FileRepositoryBundle\Intercepting\OperationInterceptorInterface');
-
-        return $incp;
-    }
-
     public function testInterceptors()
     {
-        $interceptors = array(
-            $this->createInterceptor(),
-        );
+        $itc = new DummyInterceptor();
 
         $interceptorsProvider = \Phake::mock('Modera\FileRepositoryBundle\Intercepting\InterceptorsProviderInterface');
         \Phake::when($interceptorsProvider)
             ->getInterceptors($this->isInstanceOf(Repository::clazz()))
-            ->thenReturn($interceptors)
+            ->thenReturn([$itc])
         ;
 
         $container = \Phake::mock('Symfony\Component\DependencyInjection\ContainerInterface');
@@ -60,20 +87,79 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
         // ---
 
+        $this->assertEquals(0, count($itc->beforePutInvocations));
+
         $repository->beforePut($splFile);
 
-        \Phake::verify($interceptors[0])->beforePut($splFile, $repository);
+        $this->assertEquals(1, count($itc->beforePutInvocations));
+        $this->assertSame($splFile, $itc->beforePutInvocations[0][0]);
+        $this->assertSame($repository, $itc->beforePutInvocations[0][1]);
 
         // ---
 
-        $repository->onPut($storedFile, $splFile, $repository);
+        $receivedInterceptor = null;
+        $repository->beforePut(
+            $splFile,
+            function ($interceptor) use (&$receivedInterceptor) {
+                $receivedInterceptor = $interceptor;
 
-        \Phake::verify($interceptors[0])->onPut($storedFile, $splFile, $repository);
+                return false;
+            }
+        );
+
+        $this->assertSame($itc, $receivedInterceptor);
+        $this->assertEquals(1, count($itc->beforePutInvocations));
 
         // ---
 
-        $repository->afterPut($storedFile, $splFile, $repository);
+        $this->assertEquals(0, count($itc->onPutInvocations));
 
-        \Phake::verify($interceptors[0])->afterPut($storedFile, $splFile, $repository);
+        $repository->onPut($storedFile, $splFile);
+
+        $this->assertEquals(1, count($itc->onPutInvocations));
+        $this->assertSame($storedFile, $itc->onPutInvocations[0][0]);
+        $this->assertSame($splFile, $itc->onPutInvocations[0][1]);
+        $this->assertSame($repository, $itc->onPutInvocations[0][2]);
+
+        // ---
+
+        $receivedInterceptor = null;
+        $repository->onPut(
+            $storedFile,
+            $splFile,
+            function ($interceptor) use (&$receivedInterceptor) {
+                $receivedInterceptor = $interceptor;
+
+                return false;
+            }
+        );
+
+        $this->assertSame($itc, $receivedInterceptor);
+        $this->assertEquals(1, count($itc->onPutInvocations));
+
+        // ---
+
+        $this->assertEquals(0, count($itc->afterPutInvocations));
+
+        $repository->afterPut($storedFile, $splFile);
+
+        $this->assertEquals(1, count($itc->afterPutInvocations));
+        $this->assertSame($storedFile, $itc->afterPutInvocations[0][0]);
+        $this->assertSame($splFile, $itc->afterPutInvocations[0][1]);
+        $this->assertSame($repository, $itc->afterPutInvocations[0][2]);
+
+        $receivedInterceptor = null;
+        $repository->afterPut(
+            $storedFile,
+            $splFile,
+            function ($interceptor) use (&$receivedInterceptor) {
+                $receivedInterceptor = $interceptor;
+
+                return false;
+            }
+        );
+
+        $this->assertSame($itc, $receivedInterceptor);
+        $this->assertEquals(1, count($itc->afterPutInvocations));
     }
 }

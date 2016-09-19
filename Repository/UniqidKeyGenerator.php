@@ -8,6 +8,9 @@ namespace Modera\FileRepositoryBundle\Repository;
  */
 class UniqidKeyGenerator implements StorageKeyGeneratorInterface
 {
+    /**
+     * @var bool
+     */
     private $preserveExtension;
 
     /**

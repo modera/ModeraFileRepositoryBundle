@@ -91,7 +91,9 @@ class FileRepository
 
         $config = $repository->getConfig();
 
-        $repository->beforePut($file);
+        if (!$this->isInterceptorDisabled($context, 'before')) {
+            $repository->beforePut($file, $this->createInterceptorsFilter($context, 'before'));
+        }
 
         $storedFile = null;
         $overwrite = isset($config['overwrite_files']) ? $config['overwrite_files'] : false;
@@ -100,6 +102,7 @@ class FileRepository
             if ($file instanceof UploadedFile) {
                 $filename = $file->getClientOriginalName();
             }
+
             /* @var StoredFile $storedFile */
             $storedFile = $this->em->getRepository(StoredFile::clazz())->findOneBy(array(
                 'repository' => $repository->getId(),
@@ -123,7 +126,9 @@ class FileRepository
             ));
         }
 
-        $repository->onPut($storedFile, $file);
+        if (!$this->isInterceptorDisabled($context, 'put')) {
+            $repository->onPut($storedFile, $file, $this->createInterceptorsFilter($context, 'put'));
+        }
 
         $storageKey = $storedFile->getStorageKey();
 
@@ -144,8 +149,47 @@ class FileRepository
             throw $e;
         }
 
-        $repository->afterPut($storedFile, $file);
+        if (!$this->isInterceptorDisabled($context, 'after')) {
+            $repository->afterPut($storedFile, $file, $this->createInterceptorsFilter($context, 'after'));
+        }
 
         return $storedFile;
+    }
+
+    /**
+     * @param array $context
+     * @param $type
+     *
+     * @return bool
+     */
+    private function isInterceptorDisabled(array $context, $type)
+    {
+        if (isset($context['disable_interceptors'])) {
+            if (is_bool($context['disable_interceptors'])) {
+                return $context['disable_interceptors'];
+            } else {
+                return false !== array_search($type, $context['disable_interceptors']);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array $context
+     * @param $type
+     *
+     * @return callable
+     */
+    private function createInterceptorsFilter(array $context, $type)
+    {
+        $key = strtolower($type).'_interceptor_filter';
+        if (isset($context[$key]) && is_callable($context[$key])) {
+            return $context[$key];
+        } else {
+            return function () {
+                return true;
+            };
+        }
     }
 }

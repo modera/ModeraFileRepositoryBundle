@@ -2,6 +2,7 @@
 
 namespace Modera\FileRepositoryBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -101,6 +102,23 @@ class StoredFile
     private $container;
 
     /**
+     * This field can be used by interceptors if they need to create a linked alternative representation of uploaded file.
+     * For example, an original full size picture may have different size thumbnails linked to it.
+     *
+     * @see addAlternative()
+     *
+     * @ORM\ManyToOne(targetEntity="StoredFile", cascade={"PERSIST"})
+     */
+    private $alternativeOf;
+
+    /**
+     * @see addAlternative()
+     *
+     * @ORM\OneToMany(targetEntity="StoredFile", mappedBy="alternativeOf", cascade={"PERSIST", "REMOVE"})
+     */
+    private $alternatives;
+
+    /**
      * @param Repository   $repository
      * @param \SplFileInfo $file
      * @param array        $context
@@ -119,6 +137,8 @@ class StoredFile
         $this->filename = $file->getFilename();
         $this->extension = $file->getExtension();
 
+        $this->alternatives = new ArrayCollection();
+
         if ($file instanceof File) {
             $this->mimeType = $file->getMimeType();
         }
@@ -126,6 +146,39 @@ class StoredFile
             $this->filename = $file->getClientOriginalName();
             $this->extension = $file->getClientOriginalExtension();
         }
+    }
+
+    /**
+     * @param StoredFile $alternative
+     */
+    public function addAlternative(StoredFile $alternative)
+    {
+        $this->alternatives->add($alternative);
+        $alternative->setAlternativeOf($this);
+    }
+
+    /**
+     * @return StoredFile
+     */
+    public function getAlternativeOf()
+    {
+        return $this->alternativeOf;
+    }
+
+    /**
+     * @param mixed $alternativeOf
+     */
+    public function setAlternativeOf(StoredFile $alternativeOf = null)
+    {
+        $this->alternativeOf = $alternativeOf;
+    }
+
+    /**
+     * @return StoredFile[]
+     */
+    public function getAlternatives()
+    {
+        return $this->alternatives;
     }
 
     /**
@@ -204,6 +257,14 @@ class StoredFile
     }
 
     /**
+     * @param array $meta
+     */
+    public function mergeMeta(array $meta)
+    {
+        $this->setMeta(array_merge($this->getMeta(), $meta));
+    }
+
+    /**
      * @return mixed
      */
     public function getAuthor()
@@ -257,6 +318,14 @@ class StoredFile
     public function getMeta()
     {
         return $this->meta;
+    }
+
+    /**
+     * @param mixed $meta
+     */
+    public function setMeta(array $meta)
+    {
+        $this->meta = $meta;
     }
 
     /**
