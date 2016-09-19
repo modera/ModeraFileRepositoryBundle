@@ -87,30 +87,48 @@ class Repository
     /**
      * @private
      */
-    public function beforePut(\SplFileInfo $file)
+    public function beforePut(\SplFileInfo $file, callable $filter = null)
     {
+        $filter = $filter ?: function () {
+            return true;
+        };
+
         foreach ($this->getInterceptors() as $interceptor) {
-            $interceptor->beforePut($file, $this);
+            if ($filter($interceptor)) {
+                $interceptor->beforePut($file, $this);
+            }
         }
     }
 
     /**
      * @private
      */
-    public function onPut(StoredFile $storedFile, \SplFileInfo $file)
+    public function onPut(StoredFile $storedFile, \SplFileInfo $file, callable $filter = null)
     {
+        $filter = $filter ?: function () {
+            return true;
+        };
+
         foreach ($this->getInterceptors() as $interceptor) {
-            $interceptor->onPut($storedFile, $file, $this);
+            if ($filter($interceptor)) {
+                $interceptor->onPut($storedFile, $file, $this);
+            }
         }
     }
 
     /**
      * @private
      */
-    public function afterPut(StoredFile $storedFile, \SplFileInfo $file)
+    public function afterPut(StoredFile $storedFile, \SplFileInfo $file, callable $filter = null)
     {
+        $filter = $filter ?: function () {
+            return true;
+        };
+
         foreach ($this->getInterceptors() as $interceptor) {
-            $interceptor->afterPut($storedFile, $file, $this);
+            if ($filter($interceptor)) {
+                $interceptor->afterPut($storedFile, $file, $this);
+            }
         }
     }
 

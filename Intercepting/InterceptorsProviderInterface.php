@@ -5,7 +5,7 @@ namespace Modera\FileRepositoryBundle\Intercepting;
 use Modera\FileRepositoryBundle\Entity\Repository;
 
 /**
- * Implementations of this interface are responsible for providing interceptors whe a file is being
+ * Implementations of this interface are responsible for providing interceptors when a file is being
  * uploaded to a repository.
  *
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>

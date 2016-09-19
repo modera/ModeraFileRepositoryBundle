@@ -52,5 +52,16 @@
 
             <argument type="service" id="validator" />
         </service>
+
+        <service id="modera_file_repository.interceptors.thumbnails_generator.thumbnails_generator"
+                 class="Modera\FileRepositoryBundle\ThumbnailsGenerator\ThumbnailsGenerator"
+        />
+
+        <service id="modera_file_repository.interceptors.thumbnails_generator.interceptor"
+                 class="Modera\FileRepositoryBundle\ThumbnailsGenerator\Interceptor">
+
+            <argument type="service" id="modera_file_repository.repository.file_repository" />
+            <argument type="service" id="modera_file_repository.interceptors.thumbnails_generator.thumbnails_generator" />
+        </service>
     </services>
 </container>
