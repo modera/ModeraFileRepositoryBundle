@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\File\File;
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
  * @copyright 2016 Modera Foundation
  */
-class GenerateThumbnailsCommandCommandTest extends FunctionalTestCase
+class GenerateThumbnailsCommandTest extends FunctionalTestCase
 {
     private static $st;
 
@@ -153,7 +153,8 @@ OUTPUT;
  # Processing (8) backend.png
   * 100x100
   * 50x50
-Updated repository config as well.
+Interceptor is already has been registered before, skipping ...
+Thumbnails config updated for repository
 
 OUTPUT;
 
@@ -181,6 +182,35 @@ OUTPUT;
         $this->assertEquals(4, count($repoConfig['thumbnail_sizes']));
         $this->assertEquals(array('width' => 100, 'height' => 100), $repoConfig['thumbnail_sizes'][2]);
         $this->assertEquals(array('width' => 50, 'height' => 50), $repoConfig['thumbnail_sizes'][3]);
+
+        // now making sure that no duplicate alternatives are created:
+
+        $commandTester->execute(array(
+            'command' => $commandName,
+            'repository' => 'dummy_repo1',
+            '--thumbnail' => ['32x32', '50x50'],
+        ));
+
+        $secondOutput = $commandTester->getDisplay();
+
+        $expectedSecondOutput = <<<'OUTPUT'
+ # Processing (5) backend.png
+ # Processing (8) backend.png
+Interceptor is already has been registered before, skipping ...
+Repository already contains necessary thumbnails config, skipping ...
+
+OUTPUT;
+
+        // 32x32 thumbnails must not have been generated again
+        $this->assertEquals($secondOutput, $expectedSecondOutput);
+
+        self::$em->clear();
+
+        /* @var Repository $repository */
+        $repository = self::$em->getRepository(Repository::class)->find($originalStoredFile1->getRepository()->getId());
+        $repoConfig = $repository->getConfig();
+
+        $this->assertEquals(1, count($repoConfig['interceptors']), 'No duplicate interceptors must have been registered.');
     }
 
     public function testExecute_noConfigUpdate()

@@ -77,15 +77,18 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
         // indexed by original file's ID
         $report = array();
 
+        // fetching original files
         $query = sprintf('SELECT e.id FROM %s e WHERE e.alternativeOf IS NULL AND e.repository = ?0', StoredFile::class);
         $query = $em->createQuery($query);
         $query->setParameter(0, $repository);
+
         foreach ($query->getArrayResult() as $fileData) {
             $originalId = $fileData['id'];
 
             $existingThumbnails = [];
             $missingThumbnails = [];
 
+            // fetching original file's alternatives
             $alternativesQuery = $em->createQuery(sprintf('SELECT e.id, e.meta FROM %s e WHERE e.alternativeOf = ?0', StoredFile::class));
             $alternativesQuery->setParameter(0, $fileData['id']);
 
@@ -100,13 +103,9 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
             }
 
             foreach ($expectedThumbnailsConfig as $expectedThumbnailDimensions) {
-                if (!array_search($expectedThumbnailDimensions, $existingThumbnails)) {
+                if (!in_array($expectedThumbnailDimensions, $existingThumbnails)) {
                     $missingThumbnails[] = $expectedThumbnailDimensions;
                 }
-            }
-
-            if (count($missingThumbnails) == 0) {
-                continue;
             }
 
             $report[$originalId] = array(
@@ -129,7 +128,10 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
                 /* @var StoredFile $storedFile */
                 $storedFile = $em->getRepository(StoredFile::class)->find($id);
 
-                $rows[] = [$id, $storedFile->getFilename(), implode(', ', $entry['missing']), implode(', ', $entry['existing'])];
+                $missingOnes = count($entry['missing']) > 0 ? implode(', ', $entry['missing']) : '-';
+                $existingOnes = count($entry['existing']) > 0 ? implode(', ', $entry['existing']) : '-';
+
+                $rows[] = [$id, $storedFile->getFilename(), $missingOnes, $existingOnes];
             }
 
             $table = new Table($output);
@@ -205,12 +207,17 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
         }
 
         if ($input->getOption('update-config') == true) {
+            $isInterceptorAdded = false;
+            $isThumbnailConfigUpdated = false;
+
             $repositoryConfig = $repository->getConfig();
             if (!isset($repositoryConfig['interceptors'])) {
                 $repositoryConfig['interceptors'] = [];
             }
-            if (false == array_search(Interceptor::ID, $repositoryConfig['interceptors'])) {
+            if (!in_array(Interceptor::ID, $repositoryConfig['interceptors'])) {
                 $repositoryConfig['interceptors'][] = Interceptor::ID;
+
+                $isInterceptorAdded = true;
             }
 
             if (!isset($repositoryConfig['thumbnail_sizes'])) {
@@ -227,11 +234,13 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
             foreach ($expectedThumbnailsConfig as $dimensions) {
                 list($width, $height) = explode('x', $dimensions);
 
-                if (false == array_search($dimensions, $existingThumbnailsConfigEntries)) {
+                if (!in_array($dimensions, $existingThumbnailsConfigEntries)) {
                     $repositoryConfig['thumbnail_sizes'][] = array(
                         'width' => $width,
                         'height' => $height,
                     );
+
+                    $isThumbnailConfigUpdated = true;
                 }
             }
 
@@ -239,7 +248,12 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
 
             $em->flush();
 
-            $output->writeln('Updated repository config as well.');
+            $output->writeln(
+                $isInterceptorAdded ? 'Interceptor integrated into repository' : 'Interceptor is already has been registered before, skipping ...'
+            );
+            $output->writeln(
+                $isThumbnailConfigUpdated ? 'Thumbnails config updated for repository' : 'Repository already contains necessary thumbnails config, skipping ...'
+            );
         }
     }
 }
