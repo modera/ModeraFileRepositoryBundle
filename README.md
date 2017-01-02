@@ -1,6 +1,6 @@
 # ModeraFileRepositoryBundle
 
-[![Build Status](https://travis-ci.org/modera/foundation.svg?branch=2.x)](https://travis-ci.org/modera/foundation)
+[![Build Status](https://travis-ci.org/modera/foundation.svg?branch=master)](https://travis-ci.org/modera/foundation)
 [![StyleCI](https://styleci.io/repos/19245390/shield)](https://styleci.io/repos/19245390)
 
 This bundle provides a high level API for putting your files to virtual file repositories which internally use Gaufrette
