@@ -107,7 +107,7 @@ class StoredFile
      *
      * @see addAlternative()
      *
-     * @ORM\ManyToOne(targetEntity="StoredFile", cascade={"PERSIST"})
+     * @ORM\ManyToOne(targetEntity="StoredFile", inversedBy="alternatives", cascade={"PERSIST"})
      */
     private $alternativeOf;
 
