@@ -13,17 +13,22 @@ class DefaultInterceptorsProviderTest extends \PHPUnit_Framework_TestCase
 {
     public function testGetInterceptors()
     {
-        $wannabeInterceptor = new \stdClass();
-        $anotherWannabeInterceptor = new \stdClass();
+        $dummyFilePropertiesValidationInterceptor = new \stdClass();
+        $dummyAuthoringInterceptor = new \stdClass();
+        $dummyFooInterceptor = new \stdClass();
 
         $container = \Phake::mock('Symfony\Component\DependencyInjection\ContainerInterface');
         \Phake::when($container)
             ->get('modera_file_repository.validation.file_properties_validation_interceptor')
-            ->thenReturn($wannabeInterceptor)
+            ->thenReturn($dummyFilePropertiesValidationInterceptor)
+        ;
+        \Phake::when($container)
+            ->get('modera_file_repository.authoring.authoring_interceptor')
+            ->thenReturn($dummyAuthoringInterceptor)
         ;
         \Phake::when($container)
             ->get('foo_interceptor')
-            ->thenReturn($anotherWannabeInterceptor)
+            ->thenReturn($dummyFooInterceptor)
         ;
 
         $repository = \Phake::mock(Repository::clazz());
@@ -32,20 +37,22 @@ class DefaultInterceptorsProviderTest extends \PHPUnit_Framework_TestCase
 
         $result = $provider->getInterceptors($repository);
 
-        $this->assertEquals(1, count($result));
-        $this->assertSame($wannabeInterceptor, $result[0]);
+        $this->assertEquals(2, count($result));
+        $this->assertSame($dummyFilePropertiesValidationInterceptor, $result[0]);
+        $this->assertSame($dummyAuthoringInterceptor, $result[1]);
 
         // and now with a "interceptors" config:
 
         \Phake::when($repository)
             ->getConfig()
-            ->thenReturn(array('interceptors' => array('foo_interceptor')))
+            ->thenReturn(array('interceptors' => ['foo_interceptor']))
         ;
 
         $result = $provider->getInterceptors($repository);
 
-        $this->assertEquals(2, count($result));
-        $this->assertSame($wannabeInterceptor, $result[0]);
-        $this->assertSame($anotherWannabeInterceptor, $result[1]);
+        $this->assertEquals(3, count($result));
+        $this->assertSame($dummyFilePropertiesValidationInterceptor, $result[0]);
+        $this->assertSame($dummyAuthoringInterceptor, $result[1]);
+        $this->assertSame($dummyFooInterceptor, $result[2]);
     }
 }

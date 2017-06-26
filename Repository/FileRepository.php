@@ -76,7 +76,7 @@ class FileRepository
     /**
      * @throws \RuntimeException
      *
-     * @param $repositoryName
+     * @param string       $repositoryName
      * @param \SplFileInfo $file
      * @param array        $context
      *
@@ -92,7 +92,7 @@ class FileRepository
         $config = $repository->getConfig();
 
         if (!$this->isInterceptorDisabled($context, 'before')) {
-            $repository->beforePut($file, $this->createInterceptorsFilter($context, 'before'));
+            $repository->beforePut($file, $this->createInterceptorsFilter($context, 'before'), $context);
         }
 
         $storedFile = null;
@@ -127,7 +127,7 @@ class FileRepository
         }
 
         if (!$this->isInterceptorDisabled($context, 'put')) {
-            $repository->onPut($storedFile, $file, $this->createInterceptorsFilter($context, 'put'));
+            $repository->onPut($storedFile, $file, $this->createInterceptorsFilter($context, 'put'), $context);
         }
 
         $storageKey = $storedFile->getStorageKey();
@@ -150,7 +150,7 @@ class FileRepository
         }
 
         if (!$this->isInterceptorDisabled($context, 'after')) {
-            $repository->afterPut($storedFile, $file, $this->createInterceptorsFilter($context, 'after'));
+            $repository->afterPut($storedFile, $file, $this->createInterceptorsFilter($context, 'after'), $context);
         }
 
         return $storedFile;

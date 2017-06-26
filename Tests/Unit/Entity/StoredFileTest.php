@@ -2,6 +2,7 @@
 
 namespace Modera\FileRepositoryBundle\Tests\Unit\Entity;
 
+use Modera\FileRepositoryBundle\Entity\Repository;
 use Symfony\Component\HttpFoundation\File\File;
 use Modera\FileRepositoryBundle\DependencyInjection\ModeraFileRepositoryExtension;
 use Modera\FileRepositoryBundle\Entity\StoredFile;
@@ -34,6 +35,28 @@ class StoredFileTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($dummyStorageKey, $storedFile->getStorageKey());
         $this->assertEquals('txt', $storedFile->getExtension());
         $this->assertEquals('text/plain', $storedFile->getMimeType());
+    }
+
+    public function test__construct_settingAuthorAndOwnerFields()
+    {
+        $dummyStorageKey = 'storage-key';
+
+        $file = new File(__FILE__);
+        $context = array(
+            'author' => 'foo-author',
+            'owner' => 'foo-owner',
+        );
+
+        $repo = \Phake::mock(Repository::class);
+        \Phake::when($repo)
+            ->generateStorageKey($file, $context)
+            ->thenReturn($dummyStorageKey)
+        ;
+
+        $storedFile = new StoredFile($repo, $file, $context);
+
+        $this->assertEquals($context['author'], $storedFile->getAuthor());
+        $this->assertEquals($context['owner'], $storedFile->getOwner());
     }
 
     public function testGetUrl()

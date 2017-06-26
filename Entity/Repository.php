@@ -85,9 +85,9 @@ class Repository
     }
 
     /**
-     * @private
+     * @internal
      */
-    public function beforePut(\SplFileInfo $file, callable $filter = null)
+    public function beforePut(\SplFileInfo $file, callable $filter = null, array $context = array())
     {
         $filter = $filter ?: function () {
             return true;
@@ -95,15 +95,15 @@ class Repository
 
         foreach ($this->getInterceptors() as $interceptor) {
             if ($filter($interceptor)) {
-                $interceptor->beforePut($file, $this);
+                $interceptor->beforePut($file, $this, $context);
             }
         }
     }
 
     /**
-     * @private
+     * @internal
      */
-    public function onPut(StoredFile $storedFile, \SplFileInfo $file, callable $filter = null)
+    public function onPut(StoredFile $storedFile, \SplFileInfo $file, callable $filter = null, array $context = array())
     {
         $filter = $filter ?: function () {
             return true;
@@ -111,15 +111,15 @@ class Repository
 
         foreach ($this->getInterceptors() as $interceptor) {
             if ($filter($interceptor)) {
-                $interceptor->onPut($storedFile, $file, $this);
+                $interceptor->onPut($storedFile, $file, $this, $context);
             }
         }
     }
 
     /**
-     * @private
+     * @internal
      */
-    public function afterPut(StoredFile $storedFile, \SplFileInfo $file, callable $filter = null)
+    public function afterPut(StoredFile $storedFile, \SplFileInfo $file, callable $filter = null, array $context = array())
     {
         $filter = $filter ?: function () {
             return true;
@@ -127,7 +127,7 @@ class Repository
 
         foreach ($this->getInterceptors() as $interceptor) {
             if ($filter($interceptor)) {
-                $interceptor->afterPut($storedFile, $file, $this);
+                $interceptor->afterPut($storedFile, $file, $this, $context);
             }
         }
     }
@@ -209,6 +209,8 @@ class Repository
     }
 
     /**
+     * @private Since 2.56.0
+     *
      * @param mixed $id
      */
     public function setId($id)

@@ -10,6 +10,18 @@ framework:
     templating:
         engines: ['twig']
 
+
+# Needed in order to have "security.token_storage" available
+security:
+    providers:
+        in_memory:
+            memory: ~
+
+    firewalls:
+      secured_area:
+          pattern:   ^/
+          anonymous: ~
+
 # Doctrine Configuration
 doctrine:
     dbal:

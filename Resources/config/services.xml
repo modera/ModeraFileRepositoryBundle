@@ -53,6 +53,12 @@
             <argument type="service" id="validator" />
         </service>
 
+        <service id="modera_file_repository.authoring.authoring_interceptor"
+                 class="Modera\FileRepositoryBundle\Authoring\AuthoringInterceptor">
+
+            <argument type="service" id="security.token_storage" />
+        </service>
+
         <service id="modera_file_repository.interceptors.thumbnails_generator.thumbnails_generator"
                  class="Modera\FileRepositoryBundle\ThumbnailsGenerator\ThumbnailsGenerator"
         />

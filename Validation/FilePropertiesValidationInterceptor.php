@@ -5,6 +5,7 @@ namespace Modera\FileRepositoryBundle\Validation;
 use Modera\FileRepositoryBundle\Entity\Repository;
 use Modera\FileRepositoryBundle\Entity\StoredFile;
 use Modera\FileRepositoryBundle\Exceptions\FileValidationException;
+use Modera\FileRepositoryBundle\Intercepting\BaseOperationInterceptor;
 use Modera\FileRepositoryBundle\Intercepting\OperationInterceptorInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -16,10 +17,12 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  * - use_file_constraint
  * - use_image_constraint.
  *
+ * @internal
+ *
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
  * @copyright 2015 Modera Foundation
  */
-class FilePropertiesValidationInterceptor implements OperationInterceptorInterface
+class FilePropertiesValidationInterceptor extends BaseOperationInterceptor
 {
     /**
      * @var ValidatorInterface
@@ -63,19 +66,5 @@ class FilePropertiesValidationInterceptor implements OperationInterceptorInterfa
         if (count($errors)) {
             throw FileValidationException::create($file, $errors, $repository);
         }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function onPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository)
-    {
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function afterPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository)
-    {
     }
 }

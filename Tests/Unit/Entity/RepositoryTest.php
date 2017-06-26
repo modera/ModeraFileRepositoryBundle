@@ -6,6 +6,9 @@ use Modera\FileRepositoryBundle\Entity\Repository;
 use Modera\FileRepositoryBundle\Entity\StoredFile;
 use Modera\FileRepositoryBundle\Exceptions\InvalidRepositoryConfig;
 use Modera\FileRepositoryBundle\Intercepting\OperationInterceptorInterface;
+use Modera\FileRepositoryBundle\Repository\StorageKeyGeneratorInterface;
+use Modera\FileRepositoryBundle\StoredFile\UrlGeneratorInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 // there's some glitches in Phake which didn't allow to properly
 // validate several method's invocations in one single tc

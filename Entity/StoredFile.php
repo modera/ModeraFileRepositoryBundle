@@ -70,7 +70,7 @@ class StoredFile
     private $author;
 
     /**
-     * Some tag that later can be used to figure what this stored file belongs to. It can be whatever value that your
+     * Some tag that later can be used to figure what/who this stored file belongs to. It can be whatever value that your
      * logic can parse, no restrictions implied.
      */
     private $owner;
@@ -145,6 +145,13 @@ class StoredFile
         if ($file instanceof UploadedFile) {
             $this->filename = $file->getClientOriginalName();
             $this->extension = $file->getClientOriginalExtension();
+        }
+
+        if (isset($context['author'])) {
+            $this->author = $context['author'];
+        }
+        if (isset($context['owner'])) {
+            $this->owner = $context['owner'];
         }
     }
 
@@ -358,5 +365,25 @@ class StoredFile
     public function getStorageKey()
     {
         return $this->storageKey;
+    }
+
+    /**
+     * @since 2.56.0
+     *
+     * @param mixed $author
+     */
+    public function setAuthor($author)
+    {
+        $this->author = $author;
+    }
+
+    /**
+     * @since 2.56.0
+     *
+     * @param mixed $owner
+     */
+    public function setOwner($owner)
+    {
+        $this->owner = $owner;
     }
 }
