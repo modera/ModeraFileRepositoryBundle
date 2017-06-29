@@ -1,7 +1,6 @@
 # ModeraFileRepositoryBundle
 
 [![Build Status](https://travis-ci.org/modera/foundation.svg?branch=master)](https://travis-ci.org/modera/foundation)
-[![StyleCI](https://styleci.io/repos/19245390/shield)](https://styleci.io/repos/19245390)
 
 This bundle provides a high level API for putting your files to virtual file repositories which internally use Gaufrette
 filesystem abstraction layer.
@@ -10,7 +9,7 @@ filesystem abstraction layer.
 
 Add this dependency to your composer.json:
 
-    "modera/file-repository-bundle": "~1.0"
+    "modera/file-repository-bundle": "~2.0"
 
 Update your AppKernel class and add these bundles there:
 
