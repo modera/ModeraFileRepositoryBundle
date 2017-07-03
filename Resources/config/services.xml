@@ -22,6 +22,10 @@
             <argument type="string">true</argument>
         </service>
 
+        <service id="modera_file_repository.repository.as_is_generator"
+                 class="Modera\FileRepositoryBundle\Repository\AsIsKeyGenerator">
+        </service>
+
         <service id="modera_file_repository.repository.file_repository"
                  class="Modera\FileRepositoryBundle\Repository\FileRepository">
 

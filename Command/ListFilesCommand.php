@@ -16,6 +16,8 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class ListFilesCommand extends ContainerAwareCommand
 {
+    use TableTrait;
+
     /**
      * {@inheritdoc}
      */
@@ -55,12 +57,10 @@ class ListFilesCommand extends ContainerAwareCommand
             );
         }
 
-        /* @var TableHelper $table */
-        $table = $this->getHelperSet()->get('table');
-        $table
-            ->setHeaders(array('#', 'Filename', 'Mime type', 'Size', 'Created', 'Owner'))
-            ->setRows($rows)
-        ;
-        $table->render($output);
+        $this->renderTable(
+            $output,
+            ['#', 'Filename', 'Mime type', 'Size', 'Created', 'Owner'],
+            $rows
+        );
     }
 }

@@ -8,6 +8,8 @@ use Modera\FileRepositoryBundle\Entity\StoredFile;
 /**
  * This implementation of url generator provide publicly accessible url through the controller action.
  *
+ * @deprecated Use \Modera\FileRepositoryBundle\UrlGeneration\ProxyControllerUrlGenerator instead
+ *
  * @author    Sergei Vizel <sergei.vizel@modera.org>
  * @copyright 2015 Modera Foundation
  */

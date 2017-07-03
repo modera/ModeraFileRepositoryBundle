@@ -36,6 +36,8 @@ class StoredFileController extends Controller
     }
 
     /**
+     * @internal
+     *
      * @param string $storageKey
      *
      * @return null|StoredFile
@@ -51,6 +53,8 @@ class StoredFileController extends Controller
     }
 
     /**
+     * @internal
+     *
      * @param Request $request
      * @param $storageKey
      *

@@ -37,13 +37,19 @@ class CreateRepositoryCommand extends ContainerAwareCommand
                 'images-only',
                 null,
                 InputOption::VALUE_NONE,
-                'If specified then it will be possible to upload only images to the created repository. '
+                'If specified then it will be possible to upload only images to the created repository'
             )
             ->addOption(
                 'max-size',
                 null,
                 InputOption::VALUE_OPTIONAL,
                 'Allows to set a file size limit, sample values: 100k, 5m'
+            )
+            ->addOption(
+                'key-generator',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'ID of a service which implements StorageKeyGeneratorInterface and will be used to generate names of uploaded files'
             );
     }
 
@@ -60,7 +66,18 @@ class CreateRepositoryCommand extends ContainerAwareCommand
             'overwrite_files' => $input->getOption('overwrite-files'),
         );
 
-        if ($input->getOption('preserve-extensions')) {
+        $keyGenerator = $input->getOption('key-generator');
+        $preserveExtensions = $input->getOption('preserve-extensions');
+
+        if ($keyGenerator && $preserveExtensions) {
+            $output->writeln(
+                '<error>Options --key-generator and --preserve-extensions are mutually exclusive, use only one of them.</error>'
+            );
+
+            return 1;
+        }
+
+        if ($preserveExtensions) {
             $output->writeln(' <comment>Important security note</comment>');
             $output->writeln(' By using <info>--preserve-extensions</info> a created repository will keep original extensions of');
             $output->writeln(' files that are stored in it and if you are using a local filesystem (which keeps files on the same');
@@ -77,6 +94,10 @@ class CreateRepositoryCommand extends ContainerAwareCommand
             $output->write(PHP_EOL);
 
             $config['storage_key_generator'] = 'modera_file_repository.repository.uniqid_key_generator_preserved_extension';
+        }
+
+        if (null != $keyGenerator) {
+            $config['storage_key_generator'] = $keyGenerator;
         }
 
         if ($input->getOption('images-only')) {

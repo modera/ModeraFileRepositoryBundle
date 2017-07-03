@@ -2,10 +2,9 @@
 
 namespace Modera\FileRepositoryBundle\Command;
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Modera\FileRepositoryBundle\Entity\Repository;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Helper\TableHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -15,6 +14,8 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class ListRepositoriesCommand extends ContainerAwareCommand
 {
+    use TableTrait;
+
     /**
      * {@inheritdoc}
      */
@@ -31,31 +32,29 @@ class ListRepositoriesCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /* @var EntityManager $em */
-        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        /* @var ObjectManager $om */
+        $om = $this->getContainer()->get('doctrine.orm.entity_manager');
 
-        $rows = array();
-        foreach ($em->getRepository(Repository::clazz())->findAll() as $repository) {
+        $rows = [];
+        foreach ($om->getRepository(Repository::clazz())->findAll() as $repository) {
             /* @var Repository $repository */
 
             $config = $repository->getConfig();
 
-            $rows[] = array(
+            $rows[] = [
                 $repository->getId(),
                 $repository->getName(),
                 $repository->getLabel() ? $repository->getLabel() : '-',
                 $config['filesystem'],
-                isset($config['overwrite_files']) ? $config['overwrite_files'] : false,
+                isset($config['overwrite_files']) && true == $config['overwrite_files']? 'Enabled' : 'Disabled',
                 $config['storage_key_generator'],
-            );
+            ];
         }
 
-        /* @var TableHelper $table */
-        $table = $this->getHelperSet()->get('table');
-        $table
-            ->setHeaders(array('#', 'Name', 'Label', 'Filesystem', 'Overwrite files', 'Storage key generator'))
-            ->setRows($rows)
-        ;
-        $table->render($output);
+        $this->renderTable(
+            $output,
+            ['#', 'Name', 'Label', 'Filesystem', 'Overwrite files', 'Storage key generator'],
+            $rows
+        );
     }
 }
