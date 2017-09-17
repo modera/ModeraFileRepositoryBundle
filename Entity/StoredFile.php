@@ -4,6 +4,7 @@ namespace Modera\FileRepositoryBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Gaufrette\Exception\FileNotFound;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -119,6 +120,19 @@ class StoredFile
     private $alternatives;
 
     /**
+     * Sometimes it might happen that a physical file has already been deleted when an entity
+     * is deleted and in this case deleting an entity fill also fail, in order to allow
+     * an entity without a physical file to be deleted set this value to TRUE.
+     *
+     * @see setIgnoreMissingFileOnDelete
+     *
+     * @since 2.56.0
+     *
+     * @var boolean
+     */
+    private $isMissingFileIgnoredOnDelete = false;
+
+    /**
      * @param Repository   $repository
      * @param \SplFileInfo $file
      * @param array        $context
@@ -232,11 +246,19 @@ class StoredFile
     /**
      * This method is not meant to be used directly.
      *
+     * @internal
+     *
      * @ORM\PreRemove
      */
     public function onRemove()
     {
-        $this->repository->getFilesystem()->delete($this->storageKey);
+        try {
+            $this->repository->getFilesystem()->delete($this->storageKey);
+        } catch (FileNotFound $e) {
+            if (!$this->isMissingFileIgnoredOnDelete()) {
+                throw $e;
+            }
+        }
     }
 
     /**
@@ -385,5 +407,25 @@ class StoredFile
     public function setOwner($owner)
     {
         $this->owner = $owner;
+    }
+
+    /**
+     * @since 2.56.0
+     *
+     * @param bool $ignoreMissingFileOnDelete
+     */
+    public function setIgnoreMissingFileOnDelete($ignoreMissingFileOnDelete)
+    {
+        $this->isMissingFileIgnoredOnDelete = $ignoreMissingFileOnDelete;
+    }
+
+    /**
+     * @since 2.56.0
+     *
+     * @return bool
+     */
+    public function isMissingFileIgnoredOnDelete()
+    {
+        return $this->isMissingFileIgnoredOnDelete;
     }
 }
