@@ -122,7 +122,7 @@ class StoredFile
     /**
      * Sometimes it might happen that a physical file has already been deleted when an entity
      * is deleted and in this case deleting an entity fill also fail, in order to allow
-     * an entity without a physical file to be deleted set this value to TRUE.
+     * an entity without a physical file to be deleted this value is set to TRUE.
      *
      * @see setIgnoreMissingFileOnDelete
      *
@@ -130,7 +130,7 @@ class StoredFile
      *
      * @var boolean
      */
-    private $isMissingFileIgnoredOnDelete = false;
+    private $isMissingFileIgnoredOnDelete = true;
 
     /**
      * @param Repository   $repository

@@ -64,22 +64,43 @@ class StoredFileTest extends FunctionalTestCase
 
         // ---
 
-        $fileContents = 'bar contents';
-        $filePath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'our-bar-dummy-file.txt';
-        file_put_contents($filePath, $fileContents);
-
-        $file = new File($filePath);
-
-        $storedFile = $fr->put($repository->getName(), $file, array());
-
-        self::$em->clear(); // this way we will make sure that data is actually persisted in database
-
-        /* @var StoredFile $storedFile */
-        $storedFile = self::$em->find(StoredFile::clazz(), $storedFile->getId());
-        $this->assertInstanceOf(StoredFile::clazz(), $storedFile);
+        $storedFile = $this->createAndPersistStoredFile($fr, $repository);
 
         // physically deleting a file
         $storedFile->getRepository()->getFilesystem()->delete($storedFile->getStorageKey());
+
+        self::$em->remove($storedFile);
+        self::$em->flush(); // no exception has been thrown
+    }
+
+    /**
+     * @group MPFE-1027
+     */
+    public function testDeletingEntityWithoutPhysicalFileDenied()
+    {
+        /* @var FileRepository $fr */
+        $fr = self::$container->get('modera_file_repository.repository.file_repository');
+
+        $repoName = 'dummy_repository3';
+
+        $this->assertNull($fr->getRepository($repoName));
+
+        $repositoryConfig = array(
+            'storage_key_generator' => 'modera_file_repository.repository.uniqid_key_generator',
+            'filesystem' => 'dummy_tmp_fs',
+        );
+
+        $this->assertFalse($fr->repositoryExists($repoName));
+
+        $repository = $fr->createRepository($repoName, $repositoryConfig, 'My dummy repository 3');
+
+        // ---
+
+        $storedFile = $this->createAndPersistStoredFile($fr, $repository);
+
+        // physically deleting a file
+        $storedFile->getRepository()->getFilesystem()->delete($storedFile->getStorageKey());
+        $storedFile->setIgnoreMissingFileOnDelete(false);
 
         $fileNotFoundException = null;
         try {
@@ -93,7 +114,26 @@ class StoredFileTest extends FunctionalTestCase
         $storedFile->setIgnoreMissingFileOnDelete(true);
 
         self::$em->remove($storedFile);
-        self::$em->flush();
+        self::$em->flush(); // no exception thrown because
         self::$em->clear();
+    }
+
+    private function createAndPersistStoredFile(FileRepository $fr, Repository $repository)
+    {
+        $fileContents = 'bar contents';
+        $filePath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'our-bar-dummy-file.txt';
+        file_put_contents($filePath, $fileContents);
+
+        $file = new File($filePath);
+
+        $storedFile = $fr->put($repository->getName(), $file, array());
+
+        self::$em->clear(); // this way we will make sure that data is actually persisted in database
+
+        /* @var StoredFile $storedFile */
+        $storedFile = self::$em->find(StoredFile::clazz(), $storedFile->getId());
+        $this->assertInstanceOf(StoredFile::clazz(), $storedFile);
+
+        return $storedFile;
     }
 }
