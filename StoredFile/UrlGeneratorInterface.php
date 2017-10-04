@@ -16,8 +16,9 @@ interface UrlGeneratorInterface
 {
     /**
      * @param StoredFile $storedFile
+     * @param $type
      *
      * @return string
      */
-    public function generateUrl(StoredFile $storedFile);
+    public function generateUrl(StoredFile $storedFile, $type);
 }

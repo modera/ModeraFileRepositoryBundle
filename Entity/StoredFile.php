@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Modera\FileRepositoryBundle\StoredFile\UrlGeneratorInterface;
 use Modera\FileRepositoryBundle\DependencyInjection\ModeraFileRepositoryExtension;
+use Symfony\Component\Routing\RouterInterface;
 
 /**
  * When this entity is removed from database associated with it physical file be automatically removed as well.
@@ -213,7 +214,7 @@ class StoredFile
     /**
      * @return string
      */
-    public function getUrl()
+    public function getUrl($type = RouterInterface::NETWORK_PATH)
     {
         $urlGenerator = null;
         $defaultUrlGenerator = $this->container->getParameter(
@@ -235,7 +236,7 @@ class StoredFile
             $urlGenerator = $this->container->get($defaultUrlGenerator);
         }
 
-        return $urlGenerator->generateUrl($this);
+        return $urlGenerator->generateUrl($this, $type);
     }
 
     public static function clazz()

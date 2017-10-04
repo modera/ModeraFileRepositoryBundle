@@ -6,6 +6,7 @@ use Modera\FileRepositoryBundle\Entity\Repository;
 use Symfony\Component\HttpFoundation\File\File;
 use Modera\FileRepositoryBundle\DependencyInjection\ModeraFileRepositoryExtension;
 use Modera\FileRepositoryBundle\Entity\StoredFile;
+use Symfony\Component\Routing\RouterInterface;
 
 /**
  * @author Sergei Lissovski <sergei.lissovski@gmail.com>
@@ -91,8 +92,8 @@ class StoredFileTest extends \PHPUnit_Framework_TestCase
         $storedFile = new StoredFile($repository, $splFile, $context);
         $storedFile->init($container);
 
-        \Phake::when($defaultUrlGenerator)->generateUrl($storedFile)->thenReturn('default_url');
-        \Phake::when($fooUrlGenerator)->generateUrl($storedFile)->thenReturn('foo_url');
+        \Phake::when($defaultUrlGenerator)->generateUrl($storedFile, RouterInterface::NETWORK_PATH)->thenReturn('default_url');
+        \Phake::when($fooUrlGenerator)->generateUrl($storedFile, RouterInterface::NETWORK_PATH)->thenReturn('foo_url');
 
         \Phake::when($repository)->getConfig()->thenReturn(array('filesystem' => 'foo'));
         $this->assertEquals('foo_url', $storedFile->getUrl());
