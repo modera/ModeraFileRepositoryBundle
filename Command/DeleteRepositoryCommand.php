@@ -6,9 +6,11 @@ use Doctrine\ORM\EntityManager;
 use Modera\FileRepositoryBundle\Repository\FileRepository;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Helper\DialogHelper;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
 
 /**
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
@@ -47,15 +49,16 @@ class DeleteRepositoryCommand extends ContainerAwareCommand
         }
 
         if (count($repository->getFiles()) > 0) {
-            /* @var DialogHelper $dialog */
-            $dialog = $this->getHelperSet()->get('dialog');
+            /* @var QuestionHelper $questionHelper */
+            $questionHelper = $this->getHelperSet()->get('question');
 
             $question = sprintf(
                 'Repository "%s" contains %s files, are you sure that you want to delete this repository with all these files ? [Y/n]: ',
                 $repository->getName(), count($repository->getFiles())
             );
+            $question = new Question($question);
 
-            $answer = $dialog->askConfirmation($output, $question);
+            $answer = $questionHelper->ask($input, $output, $question);
             if ($answer) {
                 $output->writeln(sprintf('Deleting repository "%s"', $repository->getName()));
 
