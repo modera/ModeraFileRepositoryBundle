@@ -78,7 +78,7 @@ class InterceptorTest extends \PHPUnit_Framework_TestCase
         ;
 
         $pathname = tempnam(sys_get_temp_dir(), 'test');
-        file_put_contents('foo', $pathname);
+        file_put_contents($pathname, 'foo');
 
         \Phake::when($m['file'])
             ->getPathname()
