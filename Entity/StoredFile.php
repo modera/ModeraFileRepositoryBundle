@@ -2,13 +2,13 @@
 
 namespace Modera\FileRepositoryBundle\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Gaufrette\Exception\FileNotFound;
 use Symfony\Component\HttpFoundation\File\File;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Modera\FileRepositoryBundle\StoredFile\UrlGeneratorInterface;
+use Modera\FileRepositoryBundle\UrlGeneration\UrlGeneratorInterface;
 use Modera\FileRepositoryBundle\DependencyInjection\ModeraFileRepositoryExtension;
 use Symfony\Component\Routing\RouterInterface;
 

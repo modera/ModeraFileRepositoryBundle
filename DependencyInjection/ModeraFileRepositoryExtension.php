@@ -48,5 +48,11 @@ class ModeraFileRepositoryExtension extends Extension
             'modera_file_repository.intercepting.interceptors_provider',
             $container->getDefinition($config['interceptors_provider'])
         );
+
+        if (class_exists('Symfony\Component\Console\Application')) {
+            try {
+                $loader->load('console.xml');
+            } catch (\Exception $e) {}
+        }
     }
 }

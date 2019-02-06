@@ -3,7 +3,7 @@
 namespace Modera\FileRepositoryBundle\Tests\Unit\StoredFile;
 
 use Symfony\Component\Routing\RouterInterface;
-use Modera\FileRepositoryBundle\StoredFile\UrlGenerator;
+use Modera\FileRepositoryBundle\UrlGeneration\UrlGenerator;
 
 /**
  * @author Sergei Vizel <sergei.vizel@modera.org>

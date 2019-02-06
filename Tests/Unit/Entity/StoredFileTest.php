@@ -77,10 +77,10 @@ class StoredFileTest extends \PHPUnit_Framework_TestCase
             ))
         ;
 
-        $defaultUrlGenerator = \Phake::mock('Modera\FileRepositoryBundle\StoredFile\UrlGeneratorInterface');
+        $defaultUrlGenerator = \Phake::mock('Modera\FileRepositoryBundle\UrlGeneration\UrlGeneratorInterface');
         \Phake::when($container)->get('default_url_generator')->thenReturn($defaultUrlGenerator);
 
-        $fooUrlGenerator = \Phake::mock('Modera\FileRepositoryBundle\StoredFile\UrlGeneratorInterface');
+        $fooUrlGenerator = \Phake::mock('Modera\FileRepositoryBundle\UrlGeneration\UrlGeneratorInterface');
         \Phake::when($container)->get('foo_url_generator')->thenReturn($fooUrlGenerator);
 
         \Phake::when($container)->get('bar_url_generator')->thenReturn('not_url_generator');

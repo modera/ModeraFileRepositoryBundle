@@ -14,26 +14,31 @@
         </service>
 
         <service id="modera_file_repository.repository.uniqid_key_generator"
-                 class="Modera\FileRepositoryBundle\Repository\UniqidKeyGenerator">
+                 class="Modera\FileRepositoryBundle\Repository\UniqidKeyGenerator"
+                 public="true">
         </service>
 
         <service id="modera_file_repository.repository.uniqid_key_generator_preserved_extension"
-                 class="Modera\FileRepositoryBundle\Repository\UniqidKeyGenerator">
+                 class="Modera\FileRepositoryBundle\Repository\UniqidKeyGenerator"
+                 public="true">
             <argument type="string">true</argument>
         </service>
 
         <service id="modera_file_repository.repository.as_is_generator"
-                 class="Modera\FileRepositoryBundle\Repository\AsIsKeyGenerator">
+                 class="Modera\FileRepositoryBundle\Repository\AsIsKeyGenerator"
+                 public="true">
         </service>
 
         <service id="modera_file_repository.repository.file_repository"
-                 class="Modera\FileRepositoryBundle\Repository\FileRepository">
+                 class="Modera\FileRepositoryBundle\Repository\FileRepository"
+                 public="true">
 
             <argument type="service" id="service_container" />
         </service>
 
         <service id="modera_file_repository.stored_file.url_generator"
-                 class="Modera\FileRepositoryBundle\StoredFile\UrlGenerator">
+                 class="Modera\FileRepositoryBundle\UrlGeneration\UrlGenerator"
+                 public="true">
 
             <argument type="service" id="router" />
             <argument>%modera_file_repository.config.controller.get_file_route%</argument>
@@ -46,29 +51,34 @@
         </service>
 
         <service id="modera_file_repository.intercepting.default_interceptors_provider"
-                 class="Modera\FileRepositoryBundle\Intercepting\DefaultInterceptorsProvider">
+                 class="Modera\FileRepositoryBundle\Intercepting\DefaultInterceptorsProvider"
+                 public="true">
 
             <argument type="service" id="service_container" />
         </service>
 
         <service id="modera_file_repository.validation.file_properties_validation_interceptor"
-                 class="Modera\FileRepositoryBundle\Validation\FilePropertiesValidationInterceptor">
+                 class="Modera\FileRepositoryBundle\Validation\FilePropertiesValidationInterceptor"
+                 public="true">
 
             <argument type="service" id="validator" />
         </service>
 
         <service id="modera_file_repository.authoring.authoring_interceptor"
-                 class="Modera\FileRepositoryBundle\Authoring\AuthoringInterceptor">
+                 class="Modera\FileRepositoryBundle\Authoring\AuthoringInterceptor"
+                 public="true">
 
             <argument type="service" id="security.token_storage" />
         </service>
 
         <service id="modera_file_repository.interceptors.thumbnails_generator.thumbnails_generator"
                  class="Modera\FileRepositoryBundle\ThumbnailsGenerator\ThumbnailsGenerator"
+                 public="true"
         />
 
         <service id="modera_file_repository.interceptors.thumbnails_generator.interceptor"
-                 class="Modera\FileRepositoryBundle\ThumbnailsGenerator\Interceptor">
+                 class="Modera\FileRepositoryBundle\ThumbnailsGenerator\Interceptor"
+                 public="true">
 
             <argument type="service" id="modera_file_repository.repository.file_repository" />
             <argument type="service" id="modera_file_repository.interceptors.thumbnails_generator.thumbnails_generator" />
