@@ -2,13 +2,13 @@
 
 namespace Modera\FileRepositoryBundle\Tests\Functional\Command;
 
-use Doctrine\ORM\Tools\SchemaTool;
 use Imagine\Gd\Imagine;
-use Modera\FileRepositoryBundle\Command\GenerateThumbnailsCommand;
+use Doctrine\ORM\Tools\SchemaTool;
 use Modera\FileRepositoryBundle\Entity\Repository;
 use Modera\FileRepositoryBundle\Entity\StoredFile;
 use Modera\FileRepositoryBundle\Repository\FileRepository;
 use Modera\FileRepositoryBundle\ThumbnailsGenerator\Interceptor;
+use Modera\FileRepositoryBundle\Command\GenerateThumbnailsCommand;
 use Modera\FoundationBundle\Testing\FunctionalTestCase;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;

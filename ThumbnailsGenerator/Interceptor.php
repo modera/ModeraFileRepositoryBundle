@@ -139,10 +139,10 @@ class Interceptor extends BaseOperationInterceptor
         if ($originalFile instanceof UploadedFile) {
             $newFile = new AlternativeUploadedFile(
                 $thumbnailPathname, // we need to save a thumbnail to the same file repository
-                $originalFile->getClientOriginalName(),
-                $originalFile->getClientMimeType(),
-                filesize($thumbnailPathname)
+                $originalFile->getClientOriginalName() ?: '',
+                $originalFile->getClientMimeType()
             );
+            $newFile->setClientSize(filesize($thumbnailPathname));
         } else {
             $newFile = new AlternativeFile($thumbnailPathname);
         }

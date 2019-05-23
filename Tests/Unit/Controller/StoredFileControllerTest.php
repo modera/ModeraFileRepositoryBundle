@@ -118,12 +118,18 @@ class StoredFileControllerTest extends \PHPUnit_Framework_TestCase
         $resp = $ctrl->getAction($request, 'storage-key/repository-name/download-me.txt');
         $this->assertEquals(Response::HTTP_OK, $resp->getStatusCode());
         $this->assertEquals($content, $resp->getContent());
-        $this->assertEquals('attachment; filename="download-me.txt"', $resp->headers->get('content-disposition'));
+        $this->assertTrue(in_array($resp->headers->get('content-disposition'), array(
+            'attachment; filename=download-me.txt',
+            'attachment; filename="download-me.txt"',
+        )));
 
         $resp = $ctrl->getAction($request, 'storage-key/foo.txt');
         $this->assertEquals(Response::HTTP_OK, $resp->getStatusCode());
         $this->assertEquals($content, $resp->getContent());
-        $this->assertEquals('attachment; filename="foo.txt"', $resp->headers->get('content-disposition'));
+        $this->assertTrue(in_array($resp->headers->get('content-disposition'), array(
+            'attachment; filename=foo.txt',
+            'attachment; filename="foo.txt"',
+        )));
 
         $ctrl->setEnabled(false);
         $resp = $ctrl->getAction($request, 'Exception');

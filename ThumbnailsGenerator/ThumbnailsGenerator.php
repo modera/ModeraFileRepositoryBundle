@@ -2,8 +2,8 @@
 
 namespace Modera\FileRepositoryBundle\ThumbnailsGenerator;
 
-use Imagine\Gd\Imagine;
 use Imagine\Image\Box;
+use Imagine\Gd\Imagine;
 use Imagine\Image\ImageInterface;
 use Modera\FileRepositoryBundle\Entity\StoredFile;
 use Symfony\Component\HttpFoundation\File\File;
@@ -28,10 +28,6 @@ class ThumbnailsGenerator
      */
     public function generate(File $image, $width, $height, $mode = null)
     {
-        if (null === $mode) {
-            $mode = ImageInterface::THUMBNAIL_INSET;
-        }
-
         $isImage = substr($image->getMimeType(), 0, strlen('image/')) == 'image/';
         if (!$isImage) {
             throw NotImageGivenException::create($image);
@@ -39,14 +35,13 @@ class ThumbnailsGenerator
 
         $pathname = tempnam(sys_get_temp_dir(), 'thumbnail_').'.'.$image->guessExtension();
 
+        $size = new Box($width, $height);
+        if (null === $mode) {
+            $mode = ImageInterface::THUMBNAIL_INSET;
+        }
+
         $imagine = new Imagine();
-        $imagine
-            ->open($image->getPathname())
-            ->thumbnail(
-                new Box($width, $height, $mode)
-            )
-            ->save($pathname)
-        ;
+        $imagine->open($image->getPathname())->thumbnail($size, $mode)->save($pathname);
 
         return $pathname;
     }
