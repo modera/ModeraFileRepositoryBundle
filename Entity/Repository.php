@@ -57,6 +57,11 @@ class Repository
     private $files;
 
     /**
+     * @ORM\Column(name="internal", type="boolean")
+     */
+    private $internal = false;
+
+    /**
      * @var ContainerInterface
      */
     private $container;
@@ -264,5 +269,21 @@ class Repository
     public function getFiles()
     {
         return $this->files;
+    }
+
+    /**
+     * @param bool $internal
+     */
+    public function setInternal($internal)
+    {
+        $this->internal = $internal;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isInternal()
+    {
+        return $this->internal;
     }
 }
