@@ -52,7 +52,7 @@ class Repository
     private $label;
 
     /**
-     * @ORM\OneToMany(targetEntity="StoredFile", mappedBy="repository", cascade={"REMOVE"})
+     * @ORM\OneToMany(targetEntity="StoredFile", mappedBy="repository", cascade={"PERSIST", "REMOVE"})
      */
     private $files;
 
