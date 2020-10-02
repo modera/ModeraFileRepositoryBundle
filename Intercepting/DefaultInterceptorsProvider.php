@@ -42,6 +42,7 @@ class DefaultInterceptorsProvider implements InterceptorsProviderInterface
 
         $ids = [
             'modera_file_repository.validation.file_properties_validation_interceptor',
+            'modera_file_repository.intercepting.mime_saver_interceptor',
             'modera_file_repository.authoring.authoring_interceptor', // since 2.56.0
         ];
 
