@@ -64,6 +64,12 @@
             <argument type="service" id="validator" />
         </service>
 
+        <service id="modera_file_repository.intercepting.mime_saver_interceptor"
+                 class="Modera\FileRepositoryBundle\Intercepting\MimeSaverInterceptor"
+                 public="true">
+
+        </service>
+
         <service id="modera_file_repository.authoring.authoring_interceptor"
                  class="Modera\FileRepositoryBundle\Authoring\AuthoringInterceptor"
                  public="true">
