@@ -16,6 +16,7 @@ class DefaultInterceptorsProviderTest extends \PHPUnit_Framework_TestCase
         $dummyFilePropertiesValidationInterceptor = new \stdClass();
         $dummyAuthoringInterceptor = new \stdClass();
         $dummyFooInterceptor = new \stdClass();
+        $mimeInterceptor = new \stdClass();
 
         $container = \Phake::mock('Symfony\Component\DependencyInjection\ContainerInterface');
         \Phake::when($container)
@@ -25,6 +26,10 @@ class DefaultInterceptorsProviderTest extends \PHPUnit_Framework_TestCase
         \Phake::when($container)
             ->get('modera_file_repository.authoring.authoring_interceptor')
             ->thenReturn($dummyAuthoringInterceptor)
+        ;
+        \Phake::when($container)
+            ->get('modera_file_repository.intercepting.mime_saver_interceptor')
+            ->thenReturn($mimeInterceptor)
         ;
         \Phake::when($container)
             ->get('foo_interceptor')
@@ -37,9 +42,10 @@ class DefaultInterceptorsProviderTest extends \PHPUnit_Framework_TestCase
 
         $result = $provider->getInterceptors($repository);
 
-        $this->assertEquals(2, count($result));
+        $this->assertEquals(3, count($result));
         $this->assertSame($dummyFilePropertiesValidationInterceptor, $result[0]);
-        $this->assertSame($dummyAuthoringInterceptor, $result[1]);
+        $this->assertSame($mimeInterceptor, $result[1]);
+        $this->assertSame($dummyAuthoringInterceptor, $result[2]);
 
         // and now with a "interceptors" config:
 
@@ -50,9 +56,10 @@ class DefaultInterceptorsProviderTest extends \PHPUnit_Framework_TestCase
 
         $result = $provider->getInterceptors($repository);
 
-        $this->assertEquals(3, count($result));
+        $this->assertEquals(4, count($result));
         $this->assertSame($dummyFilePropertiesValidationInterceptor, $result[0]);
-        $this->assertSame($dummyAuthoringInterceptor, $result[1]);
-        $this->assertSame($dummyFooInterceptor, $result[2]);
+        $this->assertSame($mimeInterceptor, $result[1]);
+        $this->assertSame($dummyAuthoringInterceptor, $result[2]);
+        $this->assertSame($dummyFooInterceptor, $result[3]);
     }
 }
