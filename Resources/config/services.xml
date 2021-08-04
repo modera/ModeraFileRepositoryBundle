@@ -36,6 +36,9 @@
             <argument type="service" id="service_container" />
         </service>
 
+        <service id="Modera\FileRepositoryBundle\Repository\FileRepository"
+                 alias="modera_file_repository.repository.file_repository" />
+
         <service id="modera_file_repository.stored_file.url_generator"
                  class="Modera\FileRepositoryBundle\UrlGeneration\UrlGenerator"
                  public="true">
