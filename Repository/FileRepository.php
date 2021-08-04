@@ -17,6 +17,7 @@ class FileRepository
 {
     /* @var EntityManager $em */
     private $em;
+
     /* @var ContainerInterface $container */
     private $container;
 
@@ -58,13 +59,15 @@ class FileRepository
      * @param string $name
      * @param array  $config For available options see Repository::$config
      * @param string $label
+     * @param bool   $internal
      *
      * @return Repository
      */
-    public function createRepository($name, array $config, $label = null)
+    public function createRepository($name, array $config, $label = null, $internal = false)
     {
         $repository = new Repository($name, $config);
         $repository->setLabel($label);
+        $repository->setInternal($internal);
         $repository->init($this->container);
 
         $this->em->persist($repository);
