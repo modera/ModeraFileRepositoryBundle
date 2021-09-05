@@ -2,7 +2,7 @@
 
 namespace Modera\FileRepositoryBundle\Command;
 
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Modera\FileRepositoryBundle\Entity\Repository;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -32,7 +32,7 @@ class ListRepositoriesCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /* @var ObjectManager $om */
+        /* @var EntityManagerInterface $om */
         $om = $this->getContainer()->get('doctrine.orm.entity_manager');
 
         $rows = [];
