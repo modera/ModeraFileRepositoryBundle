@@ -85,6 +85,9 @@
                  public="true"
         />
 
+        <service id="Modera\FileRepositoryBundle\ThumbnailsGenerator\ThumbnailsGenerator"
+                 alias="modera_file_repository.interceptors.thumbnails_generator.thumbnails_generator" />
+
         <service id="modera_file_repository.interceptors.thumbnails_generator.interceptor"
                  class="Modera\FileRepositoryBundle\ThumbnailsGenerator\Interceptor"
                  public="true">

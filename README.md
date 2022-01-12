@@ -1,25 +1,42 @@
 # ModeraFileRepositoryBundle
 
-[![Build Status](https://travis-ci.org/modera/foundation.svg?branch=master)](https://travis-ci.org/modera/foundation)
-
 This bundle provides a high level API for putting your files to virtual file repositories which internally use Gaufrette
 filesystem abstraction layer.
 
 ## Installation
 
-Add this dependency to your composer.json:
+### Step 1: Download the Bundle
 
-    "modera/file-repository-bundle": "~2.0"
+``` bash
+composer require modera/file-repository-bundle:4.x-dev
+```
 
-Update your AppKernel class and add these bundles there:
+This command requires you to have Composer installed globally, as explained
+in the [installation chapter](https://getcomposer.org/doc/00-intro.md) of the Composer documentation.
 
-    new Knp\Bundle\GaufretteBundle\KnpGaufretteBundle(), // if you still don't have it
-    new Modera\FileRepositoryBundle\ModeraFileRepositoryBundle(),
+### Step 2: Enable the Bundle
 
-And finally check your `config.yml` and make sure that validation service is enabled:
+This bundle should be automatically enabled by [Flex](https://symfony.com/doc/current/setup/flex.html).
+In case you don't use Flex, you'll need to manually enable the bundle by
+adding the following line in the `config/bundles.php` file of your project:
 
-    framework:
-        validation: ~
+``` php
+<?php
+// config/bundles.php
+
+return [
+    // ...
+    Knp\Bundle\GaufretteBundle\KnpGaufretteBundle::class => ['all' => true], // if you still don't have it
+    Modera\FileRepositoryBundle\ModeraFileRepositoryBundle::class => ['all' => true],
+];
+```
+
+And finally check your `config/packages/validator.yaml` and make sure that validation service is enabled:
+
+``` yaml
+framework:
+    validation: ~
+```
 
 ## Documentation
 
@@ -33,31 +50,37 @@ process consists of two steps:
 This is a sample filesystem configuration using Gaufrette which creates a filesystem which will use local
 `/path/to/my/filesystem` path to store files:
 
-    # app/config/config.yml
-    knp_gaufrette:
-        adapters:
-            local_fs:
-                local:
-                    directory: /path/to/my/filesystem
-        filesystems:
-            local_fs:
-                adapter:    local_fs
+``` yaml
+# config/packages/knp_gaufrette.yaml
+knp_gaufrette:
+    adapters:
+        local_fs:
+            local:
+                directory: /path/to/my/filesystem
+    filesystems:
+        local_fs:
+            adapter: local_fs
+```
 
 Once low-level filesystem is configured you can create a repository that will manage your files:
 
-    /* @var \Modera\FileRepositoryBundle\Repository\FileRepository $fr */
-    $fr = $container->get('modera_file_repository.repository.file_repository');
+``` php
+<?php
 
-    $repositoryConfig = array(
-        'filesystem' => 'local_fs'
-    );
+/* @var \Modera\FileRepositoryBundle\Repository\FileRepository $fr */
+$fr = $container->get('modera_file_repository.repository.file_repository');
 
-    $fr->createRepository('my_repository', $repositoryConfig, 'My dummy repository');
+$repositoryConfig = array(
+    'filesystem' => 'local_fs'
+);
 
-    $dummyFile = new \SplFileInfo('dummy-file.txt');
+$fr->createRepository('my_repository', $repositoryConfig, 'My dummy repository');
 
-    /* @var \Modera\FileRepositoryBundle\Entity\StoredFile $storedFile */
-    $storedFile = $fr->put('my_repository', $dummyFile);
+$dummyFile = new \SplFileInfo('dummy-file.txt');
+
+/* @var \Modera\FileRepositoryBundle\Entity\StoredFile $storedFile */
+$storedFile = $fr->put('my_repository', $dummyFile);
+```
 
 When a physical file is put to a repository its descriptor record is created in database that later you can use
 in your domain logic. For example, having a Doctrine entity which represents a physical may prove useful when you
@@ -103,28 +126,32 @@ Bundle contains an interceptor that you can use to have thumbnails automatically
 are stored in a repository, to enable this feature when creating a new repository you need to use
 **modera_file_repository.interceptors.thumbnails_generator.interceptor** interceptor:
 
-    /* @var \Modera\FileRepositoryBundle\Repository\FileRepository $fr */
-    $fr = $container->get('modera_file_repository.repository.file_repository');
+``` php
+<?php
 
-    $repositoryConfig = array(
-        'filesystem' => 'local_fs',
-        'interceptors' => [
-            \Modera\FileRepositoryBundle\ThumbnailsGenerator\Interceptor::ID,
-        ],
-        'thumbnail_sizes' => array(
-            array(
-                'width' => 300,
-                'height' => 150
-            ),
-            array(
-                'width' => 32,
-                'height' => 32
-            )
+/* @var \Modera\FileRepositoryBundle\Repository\FileRepository $fr */
+$fr = $container->get('modera_file_repository.repository.file_repository');
+
+$repositoryConfig = array(
+    'filesystem' => 'local_fs',
+    'interceptors' => [
+        \Modera\FileRepositoryBundle\ThumbnailsGenerator\Interceptor::ID,
+    ],
+    'thumbnail_sizes' => array(
+        array(
+            'width' => 300,
+            'height' => 150
+        ),
+        array(
+            'width' => 32,
+            'height' => 32
         )
-    );
+    )
+);
 
-    $fr->createRepository('vacation_pictures', $repositoryConfig, 'Pictures from vacation');
-    
+$fr->createRepository('vacation_pictures', $repositoryConfig, 'Pictures from vacation');
+```
+
 Configuration key "thumbnail_sizes" can be used to specify what thumbnail size you need to have. With this configuration
 whenever a picture is uploaded to a repository alternative will be created, for more details see StoredFile::$alternatives,
 StoredFile::$alternativeOf properties. If you already have a repository and you want to generate thumbnails for it

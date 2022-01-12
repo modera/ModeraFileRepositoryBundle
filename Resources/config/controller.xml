@@ -6,8 +6,14 @@
 
     <services>
         <defaults autowire="true" autoconfigure="true" public="false" />
-        <prototype namespace="Modera\FileRepositoryBundle\Command\" resource="../../Command/*">
-            <tag name="console.command" />
+        <prototype namespace="Modera\FileRepositoryBundle\Controller\"
+                   resource="../../Controller/*">
+
+            <call method="setContainer">
+                <argument type="service" id="service_container" />
+            </call>
+
+            <tag name="controller.service_arguments" />
         </prototype>
     </services>
 

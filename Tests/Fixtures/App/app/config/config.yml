@@ -10,10 +10,7 @@ framework:
     secret:          Hell yeah!
     csrf_protection: true
     session:         ~
-    router:          { resource: "%kernel.root_dir%/config/routing.yml" }
-    templating:
-        engines: ['twig']
-
+    router:          { resource: "%kernel.project_dir%/app/config/routing.yml" }
 
 # Needed in order to have "security.token_storage" available
 security:

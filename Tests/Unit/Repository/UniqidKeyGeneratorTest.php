@@ -7,14 +7,14 @@ use Modera\FileRepositoryBundle\Repository\UniqidKeyGenerator;
 /**
  * @author Sergei Lissovski <sergei.lissovski@gmail.com>
  */
-class UniqidKeyGeneratorTest extends \PHPUnit_Framework_TestCase
+class UniqidKeyGeneratorTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var \SplFileInfo
      */
     private $file;
 
-    public function setUp()
+    public function setUp(): void
     {
         $pathname = sys_get_temp_dir().'/foo.txt';
         file_put_contents($pathname, '');

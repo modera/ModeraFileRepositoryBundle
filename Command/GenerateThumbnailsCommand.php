@@ -2,27 +2,42 @@
 
 namespace Modera\FileRepositoryBundle\Command;
 
-use Doctrine\ORM\EntityManager;
-use Modera\FileRepositoryBundle\Entity\StoredFile;
-use Modera\FileRepositoryBundle\Repository\FileRepository;
-use Modera\FileRepositoryBundle\ThumbnailsGenerator\EmulatedUploadedFile;
-use Modera\FileRepositoryBundle\ThumbnailsGenerator\Interceptor;
-use Modera\FileRepositoryBundle\ThumbnailsGenerator\NotImageGivenException;
-use Modera\FileRepositoryBundle\ThumbnailsGenerator\ThumbnailsGenerator;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\HttpFoundation\File\File;
+use Modera\FileRepositoryBundle\ThumbnailsGenerator\NotImageGivenException;
+use Modera\FileRepositoryBundle\ThumbnailsGenerator\EmulatedUploadedFile;
+use Modera\FileRepositoryBundle\ThumbnailsGenerator\ThumbnailsGenerator;
+use Modera\FileRepositoryBundle\ThumbnailsGenerator\Interceptor;
+use Modera\FileRepositoryBundle\Repository\FileRepository;
+use Modera\FileRepositoryBundle\Entity\StoredFile;
 
 /**
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
  * @copyright 2016 Modera Foundation
  */
-class GenerateThumbnailsCommand extends ContainerAwareCommand
+class GenerateThumbnailsCommand extends Command
 {
+    private EntityManagerInterface $em;
+
+    private FileRepository $fr;
+
+    private ThumbnailsGenerator $generator;
+
+    public function __construct(EntityManagerInterface $em, FileRepository $fr, ThumbnailsGenerator $generator)
+    {
+        $this->em = $em;
+        $this->fr = $fr;
+        $this->generator = $generator;
+
+        parent::__construct();
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -59,13 +74,7 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /* @var FileRepository $fr */
-        $fr = $this->getContainer()->get('modera_file_repository.repository.file_repository');
-
-        /* @var EntityManager $em */
-        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
-
-        $repository = $fr->getRepository($input->getArgument('repository'));
+        $repository = $this->fr->getRepository($input->getArgument('repository'));
         if (!$repository) {
             throw new \RuntimeException(sprintf(
                 'Unable to find a repository with name "%s"', $input->getArgument('repository')
@@ -79,7 +88,7 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
 
         // fetching original files
         $query = sprintf('SELECT e.id FROM %s e WHERE e.alternativeOf IS NULL AND e.repository = ?0', StoredFile::class);
-        $query = $em->createQuery($query);
+        $query = $this->em->createQuery($query);
         $query->setParameter(0, $repository);
 
         foreach ($query->getArrayResult() as $fileData) {
@@ -89,7 +98,7 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
             $missingThumbnails = [];
 
             // fetching original file's alternatives
-            $alternativesQuery = $em->createQuery(sprintf('SELECT e.id, e.meta FROM %s e WHERE e.alternativeOf = ?0', StoredFile::class));
+            $alternativesQuery = $this->em->createQuery(sprintf('SELECT e.id, e.meta FROM %s e WHERE e.alternativeOf = ?0', StoredFile::class));
             $alternativesQuery->setParameter(0, $fileData['id']);
 
             foreach ($alternativesQuery->getArrayResult() as $alternativeData) {
@@ -117,7 +126,7 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
         if (count($report) == 0) {
             $output->writeln('No thumbnails to generate');
 
-            return;
+            return 0;
         }
 
         if ($input->getOption('dry-run')) {
@@ -126,7 +135,7 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
 
             foreach ($report as $id => $entry) {
                 /* @var StoredFile $storedFile */
-                $storedFile = $em->getRepository(StoredFile::class)->find($id);
+                $storedFile = $this->em->getRepository(StoredFile::class)->find($id);
 
                 $missingOnes = count($entry['missing']) > 0 ? implode(', ', $entry['missing']) : '-';
                 $existingOnes = count($entry['existing']) > 0 ? implode(', ', $entry['existing']) : '-';
@@ -139,15 +148,12 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
             $table->setRows($rows);
             $table->render();
 
-            return;
+            return 0;
         }
-
-        /* @var ThumbnailsGenerator $generator */
-        $generator = $this->getContainer()->get('modera_file_repository.interceptors.thumbnails_generator.thumbnails_generator');
 
         foreach ($report as $id => $entry) {
             /* @var StoredFile $originalStoredFile */
-            $originalStoredFile = $em->getRepository(StoredFile::class)->find($id);
+            $originalStoredFile = $this->em->getRepository(StoredFile::class)->find($id);
 
             $output->writeln(sprintf(' # Processing (%d) %s', $originalStoredFile->getId(), $originalStoredFile->getFilename()));
 
@@ -160,7 +166,7 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
                 $image = new File($originalPathname);
 
                 try {
-                    $thumbnailPathname = $generator->generate($image, $width, $height);
+                    $thumbnailPathname = $this->generator->generate($image, $width, $height);
                 } catch (NotImageGivenException $e) {
                     $output->writeln('  * Skipping, file is not an image.');
 
@@ -176,7 +182,7 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
                     filesize($thumbnailPathname)
                 );
 
-                $thumbnailStoredFile = $fr->put(
+                $thumbnailStoredFile = $this->fr->put(
                     $repository->getName(),
                     $thumbnailFile,
                     array(
@@ -189,7 +195,7 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
                     )
                 );
 
-                $generator->updateStoredFileAlternativeMeta(
+                $this->generator->updateStoredFileAlternativeMeta(
                     $thumbnailStoredFile,
                     array('width' => $width, 'height' => $height)
                 );
@@ -200,7 +206,7 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
                 // already stored a thumbnail file in its FS
                 unlink($thumbnailPathname);
 
-                $em->flush();
+                $this->em->flush();
 
                 $output->writeln(sprintf('  * %dx%d', $width, $height));
             }
@@ -246,7 +252,7 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
 
             $repository->setConfig($repositoryConfig);
 
-            $em->flush();
+            $this->em->flush();
 
             $output->writeln(
                 $isInterceptorAdded ? 'Interceptor integrated into repository' : 'Interceptor is already has been registered before, skipping ...'
@@ -255,5 +261,7 @@ class GenerateThumbnailsCommand extends ContainerAwareCommand
                 $isThumbnailConfigUpdated ? 'Thumbnails config updated for repository' : 'Repository already contains necessary thumbnails config, skipping ...'
             );
         }
+
+        return 0;
     }
 }

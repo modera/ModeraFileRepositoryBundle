@@ -3,18 +3,27 @@
 namespace Modera\FileRepositoryBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Modera\FileRepositoryBundle\Entity\Repository;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Modera\FileRepositoryBundle\Entity\Repository;
 
 /**
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
  * @copyright 2014 Modera Foundation
  */
-class ListRepositoriesCommand extends ContainerAwareCommand
+class ListRepositoriesCommand extends Command
 {
     use TableTrait;
+
+    private EntityManagerInterface $em;
+
+    public function __construct(EntityManagerInterface $em)
+    {
+        $this->em = $em;
+
+        parent::__construct();
+    }
 
     /**
      * {@inheritdoc}
@@ -32,11 +41,8 @@ class ListRepositoriesCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /* @var EntityManagerInterface $om */
-        $om = $this->getContainer()->get('doctrine.orm.entity_manager');
-
         $rows = [];
-        foreach ($om->getRepository(Repository::clazz())->findAll() as $repository) {
+        foreach ($this->em->getRepository(Repository::clazz())->findAll() as $repository) {
             /* @var Repository $repository */
 
             $config = $repository->getConfig();
@@ -56,5 +62,7 @@ class ListRepositoriesCommand extends ContainerAwareCommand
             ['#', 'Name', 'Label', 'Filesystem', 'Overwrite files', 'Storage key generator'],
             $rows
         );
+
+        return 0;
     }
 }

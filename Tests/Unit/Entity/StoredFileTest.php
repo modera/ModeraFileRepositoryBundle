@@ -11,7 +11,7 @@ use Symfony\Component\Routing\RouterInterface;
 /**
  * @author Sergei Lissovski <sergei.lissovski@gmail.com>
  */
-class StoredFileTest extends \PHPUnit_Framework_TestCase
+class StoredFileTest extends \PHPUnit\Framework\TestCase
 {
     public function test__construct()
     {

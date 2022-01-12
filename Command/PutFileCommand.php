@@ -2,18 +2,27 @@
 
 namespace Modera\FileRepositoryBundle\Command;
 
-use Modera\FileRepositoryBundle\Repository\FileRepository;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Modera\FileRepositoryBundle\Repository\FileRepository;
 
 /**
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
  * @copyright 2014 Modera Foundation
  */
-class PutFileCommand extends ContainerAwareCommand
+class PutFileCommand extends Command
 {
+    private FileRepository $fr;
+
+    public function __construct(FileRepository $fr)
+    {
+        $this->fr = $fr;
+
+        parent::__construct();
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -32,10 +41,7 @@ class PutFileCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /* @var FileRepository $fr */
-        $fr = $this->getContainer()->get('modera_file_repository.repository.file_repository');
-
-        $repository = $fr->getRepository($input->getArgument('repository'));
+        $repository = $this->fr->getRepository($input->getArgument('repository'));
         if (!$repository) {
             throw new \RuntimeException(sprintf(
                 'Unable to find a repository with name "%s"', $input->getArgument('repository')
@@ -49,8 +55,10 @@ class PutFileCommand extends ContainerAwareCommand
 
         $output->writeln(sprintf('Uploading "%s" to repository "%s"', $localPath, $repository->getName()));
 
-        $storedFile = $fr->put($repository->getName(), new \SplFileInfo($localPath));
+        $storedFile = $this->fr->put($repository->getName(), new \SplFileInfo($localPath));
 
         $output->writeln(sprintf('<info>Done! File id: %d</info>', $storedFile->getId()));
+
+        return 0;
     }
 }

@@ -46,7 +46,7 @@ class DummyInterceptor implements OperationInterceptorInterface
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
  * @copyright 2014 Modera Foundation
  */
-class RepositoryTest extends \PHPUnit_Framework_TestCase
+class RepositoryTest extends \PHPUnit\Framework\TestCase
 {
     public function test__construct()
     {

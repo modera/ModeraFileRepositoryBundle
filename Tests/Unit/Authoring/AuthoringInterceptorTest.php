@@ -23,7 +23,7 @@ class DummyUser
  *
  * @author Sergei Lissovski <sergei.lissovski@nowinnovations.com>
  */
-class AuthoringInterceptorTest extends \PHPUnit_Framework_TestCase
+class AuthoringInterceptorTest extends \PHPUnit\Framework\TestCase
 {
     public function testOnPut_happyPath()
     {

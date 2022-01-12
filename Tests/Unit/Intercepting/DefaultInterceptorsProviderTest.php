@@ -9,7 +9,7 @@ use Modera\FileRepositoryBundle\Intercepting\DefaultInterceptorsProvider;
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
  * @copyright 2015 Modera Foundation
  */
-class DefaultInterceptorsProviderTest extends \PHPUnit_Framework_TestCase
+class DefaultInterceptorsProviderTest extends \PHPUnit\Framework\TestCase
 {
     public function testGetInterceptors()
     {

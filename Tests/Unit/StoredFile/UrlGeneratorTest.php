@@ -8,7 +8,7 @@ use Modera\FileRepositoryBundle\UrlGeneration\UrlGenerator;
 /**
  * @author Sergei Vizel <sergei.vizel@modera.org>
  */
-class UrlGeneratorTest extends \PHPUnit_Framework_TestCase
+class UrlGeneratorTest extends \PHPUnit\Framework\TestCase
 {
     public function testGenerateUrl()
     {

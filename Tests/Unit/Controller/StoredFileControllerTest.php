@@ -32,7 +32,7 @@ class DummyController extends StoredFileController
  * @author    Sergei Vizel <sergei.vizel@modera.org>
  * @copyright 2015 Modera Foundation
  */
-class StoredFileControllerTest extends \PHPUnit_Framework_TestCase
+class StoredFileControllerTest extends \PHPUnit\Framework\TestCase
 {
     private function createStoredFileController()
     {

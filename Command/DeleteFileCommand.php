@@ -2,19 +2,28 @@
 
 namespace Modera\FileRepositoryBundle\Command;
 
-use Doctrine\ORM\EntityManager;
-use Modera\FileRepositoryBundle\Entity\StoredFile;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Modera\FileRepositoryBundle\Entity\StoredFile;
 
 /**
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
  * @copyright 2014 Modera Foundation
  */
-class DeleteFileCommand extends ContainerAwareCommand
+class DeleteFileCommand extends Command
 {
+    private EntityManagerInterface $em;
+
+    public function __construct(EntityManagerInterface $em)
+    {
+        $this->em = $em;
+
+        parent::__construct();
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -32,11 +41,8 @@ class DeleteFileCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /* @var EntityManager $em */
-        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
-
         /* @var StoredFile $storedFile */
-        $storedFile = $em->find(StoredFile::clazz(), $input->getArgument('file_id'));
+        $storedFile = $this->em->find(StoredFile::clazz(), $input->getArgument('file_id'));
         if (!$storedFile) {
             throw new \RuntimeException('Unable to find a file with ID '.$input->getArgument('file_id'));
         }
@@ -46,9 +52,11 @@ class DeleteFileCommand extends ContainerAwareCommand
             $storedFile->getFilename(), $storedFile->getRepository()->getName()
         ));
 
-        $em->remove($storedFile);
-        $em->flush();
+        $this->em->remove($storedFile);
+        $this->em->flush();
 
         $output->writeln('<info>Done!</info>');
+
+        return 0;
     }
 }

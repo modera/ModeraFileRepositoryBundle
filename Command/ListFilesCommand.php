@@ -2,21 +2,30 @@
 
 namespace Modera\FileRepositoryBundle\Command;
 
-use Modera\FileRepositoryBundle\Util\StoredFileUtils;
-use Modera\FileRepositoryBundle\Repository\FileRepository;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\TableHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Modera\FileRepositoryBundle\Repository\FileRepository;
+use Modera\FileRepositoryBundle\Util\StoredFileUtils;
 
 /**
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
  * @copyright 2014 Modera Foundation
  */
-class ListFilesCommand extends ContainerAwareCommand
+class ListFilesCommand extends Command
 {
     use TableTrait;
+
+    private FileRepository $fr;
+
+    public function __construct(FileRepository $fr)
+    {
+        $this->fr = $fr;
+
+        parent::__construct();
+    }
 
     /**
      * {@inheritdoc}
@@ -35,11 +44,8 @@ class ListFilesCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /* @var FileRepository $fr */
-        $fr = $this->getContainer()->get('modera_file_repository.repository.file_repository');
-
         $repositoryName = $input->getArgument('repository-name');
-        $repository = $fr->getRepository($repositoryName);
+        $repository = $this->fr->getRepository($repositoryName);
 
         if (!$repository) {
             throw new \RuntimeException(sprintf('Unable to find a repository with given name "%s"!', $repositoryName));
@@ -62,5 +68,7 @@ class ListFilesCommand extends ContainerAwareCommand
             ['#', 'Filename', 'Mime type', 'Size', 'Created', 'Owner'],
             $rows
         );
+
+        return 0;
     }
 }

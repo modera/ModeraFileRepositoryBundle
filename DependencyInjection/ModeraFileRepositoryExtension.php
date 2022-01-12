@@ -25,6 +25,7 @@ class ModeraFileRepositoryExtension extends Extension
         $config = $this->processConfiguration($configuration, $configs);
 
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
+        $loader->load('controller.xml');
         $loader->load('services.xml');
 
         $deprecated = array('is_enabled', 'route_url_prefix', 'get_file_route');

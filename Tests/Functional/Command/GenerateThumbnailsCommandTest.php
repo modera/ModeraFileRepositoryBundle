@@ -9,6 +9,7 @@ use Modera\FileRepositoryBundle\Entity\StoredFile;
 use Modera\FileRepositoryBundle\Repository\FileRepository;
 use Modera\FileRepositoryBundle\ThumbnailsGenerator\Interceptor;
 use Modera\FileRepositoryBundle\Command\GenerateThumbnailsCommand;
+use Modera\FileRepositoryBundle\ThumbnailsGenerator\ThumbnailsGenerator;
 use Modera\FoundationBundle\Testing\FunctionalTestCase;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -31,6 +32,11 @@ class GenerateThumbnailsCommandTest extends FunctionalTestCase
      * @var FileRepository
      */
     private static $fileRepository;
+
+    /**
+     * @var ThumbnailsGenerator
+     */
+    private static $generator;
 
     /**
      * {@inheritdoc}
@@ -57,8 +63,11 @@ class GenerateThumbnailsCommandTest extends FunctionalTestCase
 
     public function doSetUp()
     {
-        /* @var \Modera\FileRepositoryBundle\Repository\FileRepository $fr */
+        /* @var FileRepository $fr */
         self::$fileRepository = self::$container->get('modera_file_repository.repository.file_repository');
+
+        /* @var ThumbnailsGenerator $generator */
+        self::$generator = self::$container->get('modera_file_repository.interceptors.thumbnails_generator.thumbnails_generator');
 
         $repositoryConfig = array(
             'filesystem' => 'dummy_tmp_fs',
@@ -80,7 +89,7 @@ class GenerateThumbnailsCommandTest extends FunctionalTestCase
         self::$fileRepository->createRepository('dummy_repo1', $repositoryConfig, 'Bla bla');
 
         $this->application = new Application(self::$container->get('kernel'));
-        $this->application->add(new GenerateThumbnailsCommand());
+        $this->application->add(new GenerateThumbnailsCommand(self::$em, self::$fileRepository, self::$generator));
     }
 
     public function testExecute_noThumbnailsToGenerate()
