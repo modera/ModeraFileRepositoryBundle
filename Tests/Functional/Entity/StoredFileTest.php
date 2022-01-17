@@ -25,8 +25,8 @@ class StoredFileTest extends FunctionalTestCase
     {
         self::$st = new SchemaTool(self::$em);
         self::$st->createSchema(array(
-            self::$em->getClassMetadata(Repository::clazz()),
-            self::$em->getClassMetadata(StoredFile::clazz()),
+            self::$em->getClassMetadata(Repository::class),
+            self::$em->getClassMetadata(StoredFile::class),
         ));
     }
 
@@ -36,8 +36,8 @@ class StoredFileTest extends FunctionalTestCase
     public static function doTearDownAfterClass()
     {
         self::$st->dropSchema(array(
-            self::$em->getClassMetadata(Repository::clazz()),
-            self::$em->getClassMetadata(StoredFile::clazz()),
+            self::$em->getClassMetadata(Repository::class),
+            self::$em->getClassMetadata(StoredFile::class),
         ));
     }
 
@@ -131,8 +131,8 @@ class StoredFileTest extends FunctionalTestCase
         self::$em->clear(); // this way we will make sure that data is actually persisted in database
 
         /* @var StoredFile $storedFile */
-        $storedFile = self::$em->find(StoredFile::clazz(), $storedFile->getId());
-        $this->assertInstanceOf(StoredFile::clazz(), $storedFile);
+        $storedFile = self::$em->find(StoredFile::class, $storedFile->getId());
+        $this->assertInstanceOf(StoredFile::class, $storedFile);
 
         return $storedFile;
     }

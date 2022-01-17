@@ -45,8 +45,8 @@ class GenerateThumbnailsCommandTest extends FunctionalTestCase
     {
         self::$st = new SchemaTool(self::$em);
         self::$st->createSchema(array(
-            self::$em->getClassMetadata(Repository::clazz()),
-            self::$em->getClassMetadata(StoredFile::clazz()),
+            self::$em->getClassMetadata(Repository::class),
+            self::$em->getClassMetadata(StoredFile::class),
         ));
     }
 
@@ -56,8 +56,8 @@ class GenerateThumbnailsCommandTest extends FunctionalTestCase
     public static function doTearDownAfterClass()
     {
         self::$st->dropSchema(array(
-            self::$em->getClassMetadata(Repository::clazz()),
-            self::$em->getClassMetadata(StoredFile::clazz()),
+            self::$em->getClassMetadata(Repository::class),
+            self::$em->getClassMetadata(StoredFile::class),
         ));
     }
 

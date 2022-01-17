@@ -43,7 +43,7 @@ class DownloadFileCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         /* @var StoredFile $storedFile */
-        $storedFile = $this->em->getRepository(StoredFile::clazz())->find($input->getArgument('file_id'));
+        $storedFile = $this->em->getRepository(StoredFile::class)->find($input->getArgument('file_id'));
         if (!$storedFile) {
             throw new \RuntimeException(sprintf('Unable to find a file with ID "%s".', $input->getArgument('file_id')));
         }

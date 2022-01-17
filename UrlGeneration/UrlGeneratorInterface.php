@@ -2,9 +2,19 @@
 
 namespace Modera\FileRepositoryBundle\UrlGeneration;
 
+use Modera\FileRepositoryBundle\Entity\StoredFile;
+
 /**
- * @author Sergei Lissovski <sergei.lissovski@nowinnovations.com>
+ * @author    Sergei Vizel <sergei.vizel@modera.org>
+ * @copyright 2015 Modera Foundation
  */
-interface UrlGeneratorInterface extends \Modera\FileRepositoryBundle\StoredFile\UrlGeneratorInterface
+interface UrlGeneratorInterface
 {
+    /**
+     * @param StoredFile $storedFile
+     * @param $type
+     *
+     * @return string
+     */
+    public function generateUrl(StoredFile $storedFile, $type);
 }

@@ -69,7 +69,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         $interceptorsProvider = \Phake::mock('Modera\FileRepositoryBundle\Intercepting\InterceptorsProviderInterface');
         \Phake::when($interceptorsProvider)
-            ->getInterceptors($this->isInstanceOf(Repository::clazz()))
+            ->getInterceptors($this->isInstanceOf(Repository::class))
             ->thenReturn([$itc])
         ;
 
@@ -83,7 +83,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $repository->init($container);
 
         $splFile = new \SplFileInfo(__FILE__);
-        $storedFile = \Phake::mock(StoredFile::clazz());
+        $storedFile = \Phake::mock(StoredFile::class);
 
         // ---
 

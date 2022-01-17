@@ -1,6 +1,6 @@
 <?php
 
-namespace Modera\FileRepositoryBundle\Tests\Unit\StoredFile;
+namespace Modera\FileRepositoryBundle\Tests\Unit\UrlGeneration;
 
 use Symfony\Component\Routing\RouterInterface;
 use Modera\FileRepositoryBundle\UrlGeneration\UrlGenerator;

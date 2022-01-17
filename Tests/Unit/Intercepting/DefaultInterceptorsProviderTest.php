@@ -36,7 +36,7 @@ class DefaultInterceptorsProviderTest extends \PHPUnit\Framework\TestCase
             ->thenReturn($dummyFooInterceptor)
         ;
 
-        $repository = \Phake::mock(Repository::clazz());
+        $repository = \Phake::mock(Repository::class);
 
         $provider = new DefaultInterceptorsProvider($container);
 

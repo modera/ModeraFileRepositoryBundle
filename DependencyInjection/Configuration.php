@@ -22,19 +22,6 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
-                // deprecated
-                ->scalarNode('is_enabled')
-                    ->defaultValue(null)
-                ->end()
-                // deprecated
-                ->scalarNode('route_url_prefix')
-                    ->defaultValue(null)
-                ->end()
-                // deprecated
-                ->scalarNode('get_file_route')
-                    ->defaultValue(null)
-                ->end()
-
                 // This node add ability to control access to stored files through the proxy controller
                 // See: \Modera\FileRepositoryBundle\Entity\StoredFile::getUrl
                 ->arrayNode('controller')

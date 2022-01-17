@@ -45,7 +45,7 @@ class StoredFileController extends Controller
     protected function getFile($storageKey)
     {
         /* @var ObjectRepository $repository */
-        $repository = $this->getDoctrine()->getManager()->getRepository(StoredFile::clazz());
+        $repository = $this->getDoctrine()->getManager()->getRepository(StoredFile::class);
 
         return $repository->findOneBy(array(
             'storageKey' => $storageKey,

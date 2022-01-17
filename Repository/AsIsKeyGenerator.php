@@ -3,7 +3,7 @@
 namespace Modera\FileRepositoryBundle\Repository;
 
 /**
- * @author Sergei Lissovski <sergei.lissovski@nowinnovations.com>
+ * @author Sergei Lissovski <sergei.lissovski@modera.org>
  */
 class AsIsKeyGenerator implements StorageKeyGeneratorInterface
 {

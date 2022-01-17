@@ -21,7 +21,7 @@ class DummyUser
 /**
  * @group MPFE-1012
  *
- * @author Sergei Lissovski <sergei.lissovski@nowinnovations.com>
+ * @author Sergei Lissovski <sergei.lissovski@modera.org>
  */
 class AuthoringInterceptorTest extends \PHPUnit\Framework\TestCase
 {

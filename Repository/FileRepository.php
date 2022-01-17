@@ -37,7 +37,7 @@ class FileRepository
      */
     public function getRepository($name)
     {
-        return $this->em->getRepository(Repository::clazz())->findOneBy(array(
+        return $this->em->getRepository(Repository::class)->findOneBy(array(
             'name' => $name,
         ));
     }
@@ -49,7 +49,7 @@ class FileRepository
      */
     public function repositoryExists($name)
     {
-        $q = $this->em->createQuery(sprintf('SELECT COUNT(e.id) FROM %s e WHERE e.name = ?0', Repository::clazz()));
+        $q = $this->em->createQuery(sprintf('SELECT COUNT(e.id) FROM %s e WHERE e.name = ?0', Repository::class));
         $q->setParameter(0, $name);
 
         return $q->getSingleScalarResult() != 0;
@@ -107,7 +107,7 @@ class FileRepository
             }
 
             /* @var StoredFile $storedFile */
-            $storedFile = $this->em->getRepository(StoredFile::clazz())->findOneBy(array(
+            $storedFile = $this->em->getRepository(StoredFile::class)->findOneBy(array(
                 'repository' => $repository->getId(),
                 'filename' => $filename,
             ));

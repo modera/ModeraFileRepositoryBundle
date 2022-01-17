@@ -42,7 +42,7 @@ class DeleteFileCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         /* @var StoredFile $storedFile */
-        $storedFile = $this->em->find(StoredFile::clazz(), $input->getArgument('file_id'));
+        $storedFile = $this->em->find(StoredFile::class, $input->getArgument('file_id'));
         if (!$storedFile) {
             throw new \RuntimeException('Unable to find a file with ID '.$input->getArgument('file_id'));
         }

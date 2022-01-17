@@ -21,7 +21,7 @@ class ContainerInjectorListenerTest extends FunctionalTestCase
     public static function doSetUpBeforeClass()
     {
         self::$st = new SchemaTool(self::$em);
-        self::$st->createSchema(array(self::$em->getClassMetadata(Repository::clazz())));
+        self::$st->createSchema(array(self::$em->getClassMetadata(Repository::class)));
     }
 
     /**
@@ -29,7 +29,7 @@ class ContainerInjectorListenerTest extends FunctionalTestCase
      */
     public static function doTearDownAfterClass()
     {
-        self::$st->dropSchema(array(self::$em->getClassMetadata(Repository::clazz())));
+        self::$st->dropSchema(array(self::$em->getClassMetadata(Repository::class)));
     }
 
     public function testHowWellContainerIsInjected()
@@ -45,7 +45,7 @@ class ContainerInjectorListenerTest extends FunctionalTestCase
         self::$em->clear();
 
         /* @var Repository $repository */
-        $repository = self::$em->getRepository(Repository::clazz())->find($repository->getId());
+        $repository = self::$em->getRepository(Repository::class)->find($repository->getId());
 
         $this->assertInstanceOf(
             'Symfony\Component\DependencyInjection\ContainerInterface',

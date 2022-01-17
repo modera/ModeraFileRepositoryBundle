@@ -69,7 +69,7 @@ class StoredFileControllerTest extends \PHPUnit\Framework\TestCase
                 'txt' => 'text/plain',
             );
 
-            $storedFile = \Phake::mock(StoredFile::clazz());
+            $storedFile = \Phake::mock(StoredFile::class);
 
             \Phake::when($storedFile)->getStorageKey()->thenReturn($parts[0]);
             \Phake::when($storedFile)->getFilename()->thenReturn($filename);

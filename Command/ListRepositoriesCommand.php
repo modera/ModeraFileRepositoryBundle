@@ -42,7 +42,7 @@ class ListRepositoriesCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $rows = [];
-        foreach ($this->em->getRepository(Repository::clazz())->findAll() as $repository) {
+        foreach ($this->em->getRepository(Repository::class)->findAll() as $repository) {
             /* @var Repository $repository */
 
             $config = $repository->getConfig();
