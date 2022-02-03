@@ -2,7 +2,7 @@
 
 namespace Modera\FileRepositoryBundle\File;
 
-use Symfony\Component\HttpFoundation\File\MimeType\MimeTypeExtensionGuesser;
+use Symfony\Component\Mime\MimeTypes;
 
 /**
  * @author    Sergei Vizel <sergei.vizel@modera.org>
@@ -10,30 +10,17 @@ use Symfony\Component\HttpFoundation\File\MimeType\MimeTypeExtensionGuesser;
  */
 class Base64File extends \SplFileObject
 {
-    /**
-     * @var string
-     */
-    protected $filename;
+    protected string $filename;
 
-    /**
-     * @var string
-     */
-    protected $extension;
+    protected ?string $extension = null;
 
-    /**
-     * @var string
-     */
-    protected $mimeType;
+    protected ?string $mimeType = null;
 
-    /**
-     * @param $base64
-     * @param null|string $filename
-     */
-    public function __construct($base64, $filename = null)
+    public function __construct(string $base64, ?string $filename = null)
     {
         static::validateURI($base64);
 
-        $this->filename = $filename ?: time();
+        $this->filename = $filename ?: \sprintf('%d', time());
         $this->extension = static::extractExtension($base64);
         $this->mimeType = static::extractMimeType($base64);
 
@@ -43,7 +30,7 @@ class Base64File extends \SplFileObject
     /**
      * {@inheritdoc}
      */
-    public function getFilename()
+    public function getFilename(): string
     {
         return $this->filename;
     }
@@ -51,25 +38,17 @@ class Base64File extends \SplFileObject
     /**
      * {@inheritdoc}
      */
-    public function getExtension()
+    public function getExtension(): string
     {
-        return $this->extension;
+        return $this->extension ?? '';
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getMimeType()
+    public function getMimeType(): string
     {
-        return $this->mimeType;
+        return $this->mimeType ?? '';
     }
 
-    /**
-     * @param string $mimeType
-     * @param array $mimeTypes
-     * @return bool
-     */
-    static public function isMimeTypeAllowed($mimeType, $mimeTypes = [])
+    public static function isMimeTypeAllowed(string $mimeType, array $mimeTypes = []): bool
     {
         foreach ($mimeTypes as $mime) {
             if ($mime === $mimeType) {
@@ -86,31 +65,18 @@ class Base64File extends \SplFileObject
         return false;
     }
 
-    /**
-     * @param string $base64
-     * @return string
-     */
-    static public function extractMimeType($base64)
+    public static function extractMimeType(string $base64): ?string
     {
-        return explode(':', substr($base64, 0, strpos($base64, ';')))[1];
+        return explode(':', substr($base64, 0, strpos($base64, ';')))[1] ?: null;
     }
 
-    /**
-     * @param string $base64
-     * @return string
-     */
-    static public function extractExtension($base64)
+    public static function extractExtension(string $base64): ?string
     {
-        $guesser = new MimeTypeExtensionGuesser();
-        $extension = $guesser->guess(static::extractMimeType($base64));
-
-        return filter_var($extension, \FILTER_SANITIZE_URL);
+        $extension = MimeTypes::getDefault()->getExtensions(static::extractMimeType($base64))[0] ?? null;
+        return filter_var($extension, \FILTER_SANITIZE_URL) ?: null;
     }
 
-    /**
-     * @param string $base64
-     */
-    static public function validateURI($base64)
+    public static function validateURI(string $base64)
     {
         if (!preg_match('/^data:([a-z0-9][a-z0-9\!\#\$\&\-\^\_\+\.]{0,126}\/[a-z0-9][a-z0-9\!\#\$\&\-\^\_\+\.]{0,126}(;[a-z0-9\-]+\=[a-z0-9\-]+)?)?(;base64)?,[a-z0-9\!\$\&\\\'\,\(\)\*\+\,\;\=\-\.\_\~\:\@\/\?\%\s]*\s*$/i', $base64)) {
             throw new \UnexpectedValueException('The provided "data:" URI is not valid.');
