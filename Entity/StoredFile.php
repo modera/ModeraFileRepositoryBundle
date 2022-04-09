@@ -134,6 +134,12 @@ class StoredFile
     private $isMissingFileIgnoredOnDelete = true;
 
     /**
+     * @var int
+     * @ORM\Column(type="integer")
+     */
+    private $position = 0;
+
+    /**
      * @param Repository   $repository
      * @param \SplFileInfo $file
      * @param array        $context
@@ -321,7 +327,7 @@ class StoredFile
     }
 
     /**
-     * @return mixed
+     * @return \DateTime
      */
     public function getCreatedAt()
     {
@@ -334,6 +340,14 @@ class StoredFile
     public function getExtension()
     {
         return $this->extension;
+    }
+
+    /**
+     * @param string $filename
+     */
+    public function setFilename($filename)
+    {
+        $this->filename = $filename;
     }
 
     /**
@@ -438,5 +452,21 @@ class StoredFile
     public function isMissingFileIgnoredOnDelete()
     {
         return $this->isMissingFileIgnoredOnDelete;
+    }
+
+    /**
+     * @param int $position
+     */
+    public function setPosition($position)
+    {
+        $this->position = $position;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPosition()
+    {
+        return $this->position;
     }
 }
