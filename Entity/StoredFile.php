@@ -3,14 +3,15 @@
 namespace Modera\FileRepositoryBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Gaufrette\Exception\FileNotFound;
-use Symfony\Component\HttpFoundation\File\File;
 use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Gaufrette\Exception\FileNotFound;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Modera\FileRepositoryBundle\UrlGeneration\UrlGeneratorInterface;
-use Modera\FileRepositoryBundle\DependencyInjection\ModeraFileRepositoryExtension;
+use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Routing\RouterInterface;
+use Modera\FileRepositoryBundle\DependencyInjection\ModeraFileRepositoryExtension;
+use Modera\FileRepositoryBundle\File\Base64File;
+use Modera\FileRepositoryBundle\UrlGeneration\UrlGeneratorInterface;
 
 /**
  * When this entity is removed from database associated with it physical file be automatically removed as well.
@@ -160,7 +161,7 @@ class StoredFile
 
         $this->alternatives = new ArrayCollection();
 
-        if ($file instanceof File) {
+        if ($file instanceof File || $file instanceof Base64File) {
             $this->mimeType = $file->getMimeType();
         }
         if ($file instanceof UploadedFile) {
