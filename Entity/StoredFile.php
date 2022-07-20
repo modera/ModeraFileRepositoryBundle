@@ -130,7 +130,7 @@ class StoredFile
      *
      * @since 2.56.0
      *
-     * @var boolean
+     * @var bool
      */
     private $isMissingFileIgnoredOnDelete = true;
 
