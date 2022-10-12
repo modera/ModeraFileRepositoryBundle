@@ -20,7 +20,7 @@ class Base64File extends \SplFileObject
     {
         static::validateURI($base64);
 
-        $this->filename = $filename ?: \sprintf('%d', time());
+        $this->filename = $filename ?: \sprintf('%d', \time());
         $this->extension = static::extractExtension($base64);
         $this->mimeType = static::extractMimeType($base64);
 
@@ -48,6 +48,11 @@ class Base64File extends \SplFileObject
         return $this->mimeType ?? '';
     }
 
+    public function getContents(): string
+    {
+        return @\file_get_contents($this->getPathname()) ?: '';
+    }
+
     public static function isMimeTypeAllowed(string $mimeType, array $mimeTypes = []): bool
     {
         foreach ($mimeTypes as $mime) {
@@ -55,8 +60,8 @@ class Base64File extends \SplFileObject
                 return true;
             }
 
-            if ($discrete = strstr($mime, '/*', true)) {
-                if (strstr($mimeType, '/', true) === $discrete) {
+            if ($discrete = \strstr($mime, '/*', true)) {
+                if (\strstr($mimeType, '/', true) === $discrete) {
                     return true;
                 }
             }
@@ -67,18 +72,18 @@ class Base64File extends \SplFileObject
 
     public static function extractMimeType(string $base64): ?string
     {
-        return explode(':', substr($base64, 0, strpos($base64, ';')))[1] ?: null;
+        return \explode(':', \substr($base64, 0, \strpos($base64, ';')))[1] ?? null ?: null;
     }
 
     public static function extractExtension(string $base64): ?string
     {
         $extension = MimeTypes::getDefault()->getExtensions(static::extractMimeType($base64))[0] ?? null;
-        return filter_var($extension, \FILTER_SANITIZE_URL) ?: null;
+        return \filter_var($extension, \FILTER_SANITIZE_URL) ?: null;
     }
 
     public static function validateURI(string $base64)
     {
-        if (!preg_match('/^data:([a-z0-9][a-z0-9\!\#\$\&\-\^\_\+\.]{0,126}\/[a-z0-9][a-z0-9\!\#\$\&\-\^\_\+\.]{0,126}(;[a-z0-9\-]+\=[a-z0-9\-]+)?)?(;base64)?,[a-z0-9\!\$\&\\\'\,\(\)\*\+\,\;\=\-\.\_\~\:\@\/\?\%\s]*\s*$/i', $base64)) {
+        if (!\preg_match('/^data:([a-z0-9][a-z0-9\!\#\$\&\-\^\_\+\.]{0,126}\/[a-z0-9][a-z0-9\!\#\$\&\-\^\_\+\.]{0,126}(;[a-z0-9\-]+\=[a-z0-9\-]+)?)?(;base64)?,[a-z0-9\!\$\&\\\'\,\(\)\*\+\,\;\=\-\.\_\~\:\@\/\?\%\s]*\s*$/i', $base64)) {
             throw new \UnexpectedValueException('The provided "data:" URI is not valid.');
         }
     }
