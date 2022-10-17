@@ -14,7 +14,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Every repository is associated with one underlying Gaufrette filesystem.
  *
  * @ORM\Entity
- * @ORM\Table("modera_filerepository_repository")
+ * @ORM\Table(
+ *     name="modera_filerepository_repository",
+ *     indexes={
+ *         @ORM\Index(name="name_idx", columns={"name"})
+ *     }
+ * )
  *
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
  * @copyright 2014 Modera Foundation
