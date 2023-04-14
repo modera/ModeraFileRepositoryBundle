@@ -8,7 +8,7 @@ filesystem abstraction layer.
 ### Step 1: Download the Bundle
 
 ``` bash
-composer require modera/file-repository-bundle:4.x-dev
+composer require modera/file-repository-bundle:5.x-dev
 ```
 
 This command requires you to have Composer installed globally, as explained
