@@ -3,6 +3,7 @@
 namespace Modera\FileRepositoryBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gaufrette\Filesystem;
 use Modera\FileRepositoryBundle\Exceptions\InvalidRepositoryConfig;
@@ -279,7 +280,7 @@ class Repository
     }
 
     /**
-     * @return StoredFile[]
+     * @return StoredFile[]|Collection
      */
     public function getFiles()
     {
