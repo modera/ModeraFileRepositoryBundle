@@ -2,11 +2,11 @@
 
 namespace Modera\FileRepositoryBundle\Command;
 
+use Modera\FileRepositoryBundle\Repository\FileRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Modera\FileRepositoryBundle\Repository\FileRepository;
 
 /**
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
@@ -23,10 +23,7 @@ class PutFileCommand extends Command
         parent::__construct();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('modera:file-repository:put-file')
@@ -36,28 +33,26 @@ class PutFileCommand extends Command
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $repository = $this->fr->getRepository($input->getArgument('repository'));
+        /** @var string $repositoryName */
+        $repositoryName = $input->getArgument('repository');
+        $repository = $this->fr->getRepository($repositoryName);
         if (!$repository) {
-            throw new \RuntimeException(sprintf(
-                'Unable to find a repository with name "%s"', $input->getArgument('repository')
-            ));
+            throw new \RuntimeException(\sprintf('Unable to find a repository with name "%s"', $repositoryName));
         }
 
+        /** @var string $localPath */
         $localPath = $input->getArgument('local_path');
-        if (!file_exists($localPath) || !is_readable($localPath)) {
-            throw new \RuntimeException(sprintf('Unable to find a file "%s" or it is not readable', $localPath));
+        if (!\file_exists($localPath) || !\is_readable($localPath)) {
+            throw new \RuntimeException(\sprintf('Unable to find a file "%s" or it is not readable', $localPath));
         }
 
-        $output->writeln(sprintf('Uploading "%s" to repository "%s"', $localPath, $repository->getName()));
+        $output->writeln(\sprintf('Uploading "%s" to repository "%s"', $localPath, $repository->getName()));
 
         $storedFile = $this->fr->put($repository->getName(), new \SplFileInfo($localPath));
 
-        $output->writeln(sprintf('<info>Done! File id: %d</info>', $storedFile->getId()));
+        $output->writeln(\sprintf('<info>Done! File id: %d</info>', $storedFile->getId()));
 
         return 0;
     }

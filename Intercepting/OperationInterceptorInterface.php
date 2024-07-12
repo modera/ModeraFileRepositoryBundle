@@ -19,30 +19,24 @@ use Modera\FileRepositoryBundle\Entity\StoredFile;
 interface OperationInterceptorInterface
 {
     /**
-     * Throwing an exception in this method will prevent a file from
-     * being uploaded to a repository.
+     * Throwing an exception in this method will prevent a file from being uploaded to a repository.
      *
-     * @param \SplFileInfo $file
-     * @param Repository   $repository
+     * @param array<mixed> $context
      */
-    public function beforePut(\SplFileInfo $file, Repository $repository);
+    public function beforePut(\SplFileInfo $file, Repository $repository, array $context = []): void;
 
     /**
-     * Method is invoked when a StoredFile is configured but before it is persisted into storage.
+     * Method is invoked when a StoredFile is configured, but before it is persisted into storage.
      *
-     * @param StoredFile   $storedFile
-     * @param \SplFileInfo $file
-     * @param Repository   $repository
+     * @param array<mixed> $context
      */
-    public function onPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository);
+    public function onPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository, array $context = []): void;
 
     /**
-     * Method is invoked when a file is uploaded and $storedFile has been successfully persisted. Changes
-     * that you do $storedFile here won't be automatically persisted to database.
+     * Method is invoked when a file is uploaded and $storedFile has been successfully persisted.
+     * Changes that you do $storedFile here won't be automatically persisted to database.
      *
-     * @param StoredFile   $storedFile
-     * @param \SplFileInfo $file
-     * @param Repository   $repository
+     * @param array<mixed> $context
      */
-    public function afterPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository);
+    public function afterPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository, array $context = []): void;
 }

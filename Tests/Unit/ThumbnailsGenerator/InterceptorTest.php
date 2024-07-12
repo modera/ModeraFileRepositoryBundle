@@ -2,6 +2,7 @@
 
 namespace Modera\FileRepositoryBundle\Tests\Unit\ThumbnailsGenerator;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Modera\FileRepositoryBundle\Entity\Repository;
 use Modera\FileRepositoryBundle\Entity\StoredFile;
 use Modera\FileRepositoryBundle\Repository\FileRepository;
@@ -14,11 +15,13 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 // because Phake was not working propertly when several \Phake::verify/capture were used in one TC
 class MockFileRepository extends FileRepository
 {
-    public $invocations = [];
+    public array $invocations = [];
 
-    public function put($repositoryName, \SplFileInfo $file, array $context = array())
+    public function put($repositoryName, \SplFileInfo $file, array $context = []): StoredFile
     {
         $this->invocations[] = [$repositoryName, $file, $context];
+
+        return \Phake::mock(StoredFile::class);
     }
 }
 
@@ -30,7 +33,13 @@ class InterceptorTest extends \PHPUnit\Framework\TestCase
 {
     private function createMocks()
     {
-        $fr = new MockFileRepository(\Phake::mock(ContainerInterface::class));
+        $container = \Phake::mock(ContainerInterface::class);
+        \Phake::when($container)
+            ->get('doctrine.orm.entity_manager')
+            ->thenReturn(\Phake::mock(EntityManagerInterface::class))
+        ;
+
+        $fr = new MockFileRepository($container);
 
         $tg = \Phake::mock(ThumbnailsGenerator::class);
 
@@ -57,18 +66,19 @@ class InterceptorTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testOnPut_noConfig()
+    public function testDoPut_noConfig()
     {
         $m = $this->createMocks();
 
         $itc = new Interceptor($m['file_repository'], $m['thumbnails_generator']);
 
         $this->assertEquals(
-            Interceptor::RESULT_NO_CONFIG_AVAILABLE, $itc->onPut($m['stored_file'], $m['file'], $m['repository'])
+            Interceptor::RESULT_NO_CONFIG_AVAILABLE,
+            $itc->doPut($m['stored_file'], $m['file'], $m['repository'])
         );
     }
 
-    public function testOnPut_notImageGiven()
+    public function testDoPut_notImageGiven()
     {
         $m = $this->createMocks();
 
@@ -88,11 +98,12 @@ class InterceptorTest extends \PHPUnit\Framework\TestCase
         $itc = new Interceptor($m['file_repository'], $m['thumbnails_generator']);
 
         $this->assertEquals(
-            Interceptor::RESULT_NOT_IMAGE_GIVEN, $itc->onPut($m['stored_file'], $m['file'], $m['repository'])
+            Interceptor::RESULT_NOT_IMAGE_GIVEN,
+            $itc->doPut($m['stored_file'], $m['file'], $m['repository'])
         );
     }
 
-    public function testOnPut()
+    public function testDoPut()
     {
         $m = $this->createMocks();
 
@@ -135,7 +146,8 @@ class InterceptorTest extends \PHPUnit\Framework\TestCase
         $itc = new Interceptor($m['file_repository'], $m['thumbnails_generator']);
 
         $this->assertEquals(
-            Interceptor::RESULT_SCHEDULED, $itc->onPut($m['stored_file'], $m['file'], $m['repository'])
+            Interceptor::RESULT_SCHEDULED,
+            $itc->doPut($m['stored_file'], $m['file'], $m['repository'])
         );
 
         $this->assertTrue(isset($m['file_repository']->invocations[0]));
@@ -162,7 +174,8 @@ class InterceptorTest extends \PHPUnit\Framework\TestCase
         ;
 
         $this->assertEquals(
-            Interceptor::RESULT_SCHEDULED, $itc->onPut($firstThumbnailStoredFile, $firstScheduledFile, $m['repository'])
+            Interceptor::RESULT_SCHEDULED,
+            $itc->doPut($firstThumbnailStoredFile, $firstScheduledFile, $m['repository'])
         );
 
         \Phake::verify($m['thumbnails_generator'])
@@ -171,7 +184,7 @@ class InterceptorTest extends \PHPUnit\Framework\TestCase
 
         $this->assertTrue(isset($m['file_repository']->invocations[1]));
         /* @var AlternativeUploadedFile $secondScheduledFile */
-        $secondScheduledFile = $firstScheduledFile = $m['file_repository']->invocations[1][1];
+        $secondScheduledFile = $m['file_repository']->invocations[1][1];
 
         $this->assertInstanceOf(AlternativeUploadedFile::class, $secondScheduledFile);
         $this->assertSame($m['file'], $secondScheduledFile->getOriginalFile());
@@ -187,7 +200,8 @@ class InterceptorTest extends \PHPUnit\Framework\TestCase
         ;
 
         $this->assertEquals(
-            Interceptor::RESULT_NO_MORE_THUMBNAILS, $itc->onPut($secondThumbnailStoredFile, $secondScheduledFile, $m['repository'])
+            Interceptor::RESULT_NO_MORE_THUMBNAILS,
+            $itc->doPut($secondThumbnailStoredFile, $secondScheduledFile, $m['repository'])
         );
 
         \Phake::verify($m['thumbnails_generator'])

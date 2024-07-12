@@ -2,23 +2,19 @@
 
 namespace Modera\FileRepositoryBundle\Intercepting;
 
+use Gaufrette\Adapter\AwsS3;
 use Modera\FileRepositoryBundle\Entity\Repository;
 use Modera\FileRepositoryBundle\Entity\StoredFile;
-use Modera\FileRepositoryBundle\Intercepting\BaseOperationInterceptor;
-use Gaufrette\Adapter\AwsS3;
 
 /**
- * Put content-type to s3 metadata
+ * Put content-type to s3 metadata.
  *
  * @author Stas Chychkan <stas.chichkan@modera.net>
  * @copyright 2020 Modera Foundation
  */
 class MimeSaverInterceptor extends BaseOperationInterceptor
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function onPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository)
+    public function onPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository, array $context = []): void
     {
         if ($storedFile->getMimeType()) {
             $adapter = $repository->getFileSystem()->getAdapter();

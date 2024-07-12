@@ -2,8 +2,8 @@
 
 namespace Modera\FileRepositoryBundle\ThumbnailsGenerator;
 
-use Imagine\Image\Box;
 use Imagine\Gd\Imagine;
+use Imagine\Image\Box;
 use Imagine\Image\ImageInterface;
 use Modera\FileRepositoryBundle\Entity\StoredFile;
 use Symfony\Component\HttpFoundation\File\File;
@@ -17,23 +17,20 @@ use Symfony\Component\HttpFoundation\File\File;
 class ThumbnailsGenerator
 {
     /**
-     * @throws NotImageGivenException
-     *
-     * @param File   $image
-     * @param int    $width
-     * @param int    $height
-     * @param string $mode   Either "inset" or "outbound", see ImageInterface::THUMBNAIL_* constants for more details
+     * @param string $mode Either "inset" or "outbound", see ImageInterface::THUMBNAIL_* constants for more details
      *
      * @return string A path to a temporary file where thumbnail is saved
+     *
+     * @throws NotImageGivenException
      */
-    public function generate(File $image, $width, $height, $mode = null)
+    public function generate(File $image, int $width, int $height, ?string $mode = null): string
     {
-        $isImage = substr($image->getMimeType(), 0, strlen('image/')) == 'image/';
+        $isImage = 'image/' === \substr($image->getMimeType() ?? '', 0, \strlen('image/'));
         if (!$isImage) {
             throw NotImageGivenException::create($image);
         }
 
-        $pathname = tempnam(sys_get_temp_dir(), 'thumbnail_').'.'.$image->guessExtension();
+        $pathname = \tempnam(\sys_get_temp_dir(), 'thumbnail_').'.'.$image->guessExtension();
 
         $size = new Box($width, $height);
         if (null === $mode) {
@@ -47,11 +44,10 @@ class ThumbnailsGenerator
     }
 
     /**
-     * @param StoredFile $alternative
-     * @param array      $thumbnailConfig
+     * @param array<mixed> $thumbnailConfig
      */
-    public function updateStoredFileAlternativeMeta(StoredFile $alternative, array $thumbnailConfig)
+    public function updateStoredFileAlternativeMeta(StoredFile $alternative, array $thumbnailConfig): void
     {
-        $alternative->mergeMeta(array('thumbnail' => $thumbnailConfig));
+        $alternative->mergeMeta(['thumbnail' => $thumbnailConfig]);
     }
 }

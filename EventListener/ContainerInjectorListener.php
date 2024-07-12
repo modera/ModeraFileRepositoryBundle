@@ -2,10 +2,10 @@
 
 namespace Modera\FileRepositoryBundle\EventListener;
 
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Modera\FileRepositoryBundle\Entity\Repository;
 use Modera\FileRepositoryBundle\Entity\StoredFile;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Doctrine\ORM\Event\LifecycleEventArgs;
 
 /**
  * Injects a reference to service container to Repository entity whenever it is fetched
@@ -16,23 +16,20 @@ use Doctrine\ORM\Event\LifecycleEventArgs;
  */
 class ContainerInjectorListener
 {
-    private $container;
+    private ContainerInterface $container;
 
-    /**
-     * @param ContainerInterface $container
-     */
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
     }
 
-    public function postLoad(LifecycleEventArgs $event)
+    public function postLoad(LifecycleEventArgs $event): void
     {
-        if ($event->getEntity() instanceof Repository) {
-            $event->getEntity()->init($this->container);
+        if ($event->getObject() instanceof Repository) {
+            $event->getObject()->init($this->container);
         }
-        if ($event->getEntity() instanceof StoredFile) {
-            $event->getEntity()->init($this->container);
+        if ($event->getObject() instanceof StoredFile) {
+            $event->getObject()->init($this->container);
         }
     }
 }

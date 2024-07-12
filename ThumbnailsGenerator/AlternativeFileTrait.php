@@ -12,67 +12,49 @@ use Modera\FileRepositoryBundle\Entity\StoredFile;
  */
 trait AlternativeFileTrait
 {
-    /**
-     * @var \SplFileInfo
-     */
-    private $originalFile;
+    private \SplFileInfo $originalFile;
 
-    /**
-     * @var StoredFile
-     */
-    private $originalStoredFile;
+    private StoredFile $originalStoredFile;
 
     /**
      * A thumbnail config that was used to product this file.
      *
-     * @var array
+     * @var array<mixed>
      */
-    private $thumbnailConfig = array();
+    private array $thumbnailConfig = [];
 
-    /**
-     * @return \SplFileInfo
-     */
-    public function getOriginalFile()
+    public function getOriginalFile(): \SplFileInfo
     {
         return $this->originalFile;
     }
 
-    /**
-     * @param \SplFileInfo $originalFile
-     */
-    public function setOriginalFile($originalFile)
+    public function setOriginalFile(\SplFileInfo $originalFile): void
     {
         $this->originalFile = $originalFile;
     }
 
-    /**
-     * @return StoredFile
-     */
-    public function getOriginalStoredFile()
+    public function getOriginalStoredFile(): StoredFile
     {
         return $this->originalStoredFile;
     }
 
-    /**
-     * @param StoredFile $originalStoredFile
-     */
-    public function setOriginalStoredFile($originalStoredFile)
+    public function setOriginalStoredFile(StoredFile $originalStoredFile): void
     {
         $this->originalStoredFile = $originalStoredFile;
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
-    public function getThumbnailConfig()
+    public function getThumbnailConfig(): array
     {
         return $this->thumbnailConfig;
     }
 
     /**
-     * @param array $thumbnailConfig
+     * @param array<mixed> $thumbnailConfig
      */
-    public function setThumbnailConfig(array $thumbnailConfig)
+    public function setThumbnailConfig(array $thumbnailConfig): void
     {
         $this->thumbnailConfig = $thumbnailConfig;
     }

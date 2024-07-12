@@ -6,18 +6,22 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gaufrette\Filesystem;
+use Gaufrette\FilesystemMapInterface;
 use Modera\FileRepositoryBundle\Exceptions\InvalidRepositoryConfig;
 use Modera\FileRepositoryBundle\Intercepting\DefaultInterceptorsProvider;
 use Modera\FileRepositoryBundle\Intercepting\OperationInterceptorInterface;
+use Modera\FileRepositoryBundle\Repository\StorageKeyGeneratorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Every repository is associated with one underlying Gaufrette filesystem.
  *
  * @ORM\Entity
+ *
  * @ORM\Table(
  *     name="modera_filerepository_repository",
  *     indexes={
+ *
  *         @ORM\Index(name="name_idx", columns={"name"})
  *     }
  * )
@@ -29,10 +33,12 @@ class Repository
 {
     /**
      * @ORM\Column(type="integer")
+     *
      * @ORM\Id
+     *
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    private ?int $id = null;
 
     /**
      * Stores configuration for this repository. Some standard configuration properties:.
@@ -41,42 +47,40 @@ class Repository
      *                   this repository.
      *  * storage_key_generator -- DI service ID of class which implements {@class StorageKeyGeneratorInterface}.
      *
-     * @ORM\Column(type="array")
+     * @ORM\Column(type="json")
      *
-     * @var array
+     * @var array<mixed>
      */
-    private $config = array();
+    private array $config = [];
 
     /**
      * @ORM\Column(type="string")
      */
-    private $name;
+    private ?string $name = null;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      */
-    private $label;
+    private ?string $label = null;
 
     /**
+     * @var Collection<int, StoredFile>
+     *
      * @ORM\OneToMany(targetEntity="StoredFile", mappedBy="repository", cascade={"PERSIST", "REMOVE"})
      */
-    private $files;
+    private Collection $files;
 
     /**
      * @ORM\Column(name="internal", type="boolean")
      */
-    private $internal = false;
+    private bool $internal = false;
+
+    private ContainerInterface $container;
 
     /**
-     * @var ContainerInterface
+     * @param array<mixed> $config
      */
-    private $container;
-
-    /**
-     * @param string $name
-     * @param array  $config
-     */
-    public function __construct($name, array $config)
+    public function __construct(string $name, array $config)
     {
         $this->name = $name;
         $this->setConfig($config);
@@ -87,9 +91,9 @@ class Repository
     /**
      * @return OperationInterceptorInterface[]
      */
-    private function getInterceptors()
+    private function getInterceptors(): array
     {
-        /* @var DefaultInterceptorsProvider $provider */
+        /** @var DefaultInterceptorsProvider $provider */
         $provider = $this->container->get('modera_file_repository.intercepting.interceptors_provider');
 
         return $provider->getInterceptors($this);
@@ -97,8 +101,10 @@ class Repository
 
     /**
      * @internal
+     *
+     * @param array<mixed> $context
      */
-    public function beforePut(\SplFileInfo $file, callable $filter = null, array $context = array())
+    public function beforePut(\SplFileInfo $file, ?callable $filter = null, array $context = []): void
     {
         $filter = $filter ?: function () {
             return true;
@@ -113,8 +119,10 @@ class Repository
 
     /**
      * @internal
+     *
+     * @param array<mixed> $context
      */
-    public function onPut(StoredFile $storedFile, \SplFileInfo $file, callable $filter = null, array $context = array())
+    public function onPut(StoredFile $storedFile, \SplFileInfo $file, ?callable $filter = null, array $context = []): void
     {
         $filter = $filter ?: function () {
             return true;
@@ -129,8 +137,10 @@ class Repository
 
     /**
      * @internal
+     *
+     * @param array<mixed> $context
      */
-    public function afterPut(StoredFile $storedFile, \SplFileInfo $file, callable $filter = null, array $context = array())
+    public function afterPut(StoredFile $storedFile, \SplFileInfo $file, ?callable $filter = null, array $context = []): void
     {
         $filter = $filter ?: function () {
             return true;
@@ -145,57 +155,57 @@ class Repository
 
     /**
      * @private
-     *
-     * @param ContainerInterface $container
      */
-    public function init(ContainerInterface $container)
+    public function init(ContainerInterface $container): void
     {
         $this->container = $container;
     }
 
     /**
      * @deprecated Use native ::class property
-     *
-     * @return string
      */
-    public static function clazz()
+    public static function clazz(): string
     {
-        @trigger_error(sprintf(
+        @\trigger_error(\sprintf(
             'The "%s()" method is deprecated. Use native ::class property.',
             __METHOD__
         ), \E_USER_DEPRECATED);
 
-        return get_called_class();
+        return \get_called_class();
     }
 
-    /**
-     * @return Filesystem
-     */
-    public function getFilesystem()
+    public function getFilesystem(): Filesystem
     {
+        /** @var FilesystemMapInterface $map */
         $map = $this->container->get('knp_gaufrette.filesystem_map');
 
-        return $map->get($this->config['filesystem']);
+        /** @var string $filesystem */
+        $filesystem = $this->config['filesystem'] ?? '';
+
+        /** @var Filesystem $fs */
+        $fs = $map->get($filesystem);
+
+        return $fs;
     }
 
     /**
-     * @param \SplFileInfo $file
-     * @param array        $context
-     *
-     * @return string
+     * @param array<mixed> $context
      */
-    public function generateStorageKey(\SplFileInfo $file, array $context)
+    public function generateStorageKey(\SplFileInfo $file, array $context): string
     {
-        return $this->container->get($this->config['storage_key_generator'])->generateStorageKey($file, $context);
+        /** @var string $storageKeyGenerator */
+        $storageKeyGenerator = $this->config['storage_key_generator'] ?? '';
+
+        /** @var StorageKeyGeneratorInterface $generator */
+        $generator = $this->container->get($storageKeyGenerator);
+
+        return $generator->generateStorageKey($file, $context);
     }
 
     /**
-     * @param \SplFileInfo $file
-     * @param array        $context
-     *
-     * @return StoredFile
+     * @param array<mixed> $context
      */
-    public function createFile(\SplFileInfo $file, array $context = array())
+    public function createFile(\SplFileInfo $file, array $context = []): StoredFile
     {
         $result = new StoredFile($this, $file, $context);
         $result->init($this->container);
@@ -205,9 +215,9 @@ class Repository
     }
 
     /**
-     * @param array $config
+     * @param array<mixed> $config
      */
-    public function setConfig(array $config)
+    public function setConfig(array $config): void
     {
         if (!isset($config['filesystem'])) {
             throw InvalidRepositoryConfig::create('filesystem', $config);
@@ -222,83 +232,63 @@ class Repository
     // boilerplate:
 
     /**
-     * @return array
+     * @return array<mixed>
      */
-    public function getConfig()
+    public function getConfig(): array
     {
         return $this->config;
     }
 
     /**
-     * @private Since 2.56.0
-     *
-     * @param mixed $id
+     * @private
      */
-    public function setId($id)
+    public function setId(int $id): void
     {
         $this->id = $id;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
 
-    /**
-     * @param mixed $label
-     */
-    public function setLabel($label)
+    public function setLabel(?string $label): void
     {
         $this->label = $label;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getLabel()
+    public function getLabel(): ?string
     {
         return $this->label;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getName()
+    public function getName(): string
     {
-        return $this->name;
+        return $this->name ?? '';
     }
 
     /**
-     * @param mixed $files
+     * @param Collection<int, StoredFile> $files
      */
-    public function setFiles($files)
+    public function setFiles(Collection $files): void
     {
         $this->files = $files;
     }
 
     /**
-     * @return StoredFile[]|Collection
+     * @return Collection<int, StoredFile>
      */
-    public function getFiles()
+    public function getFiles(): Collection
     {
         return $this->files;
     }
 
-    /**
-     * @param bool $internal
-     */
-    public function setInternal($internal)
+    public function setInternal(bool $internal): void
     {
         $this->internal = $internal;
     }
 
-    /**
-     * @return bool
-     */
-    public function isInternal()
+    public function isInternal(): bool
     {
         return $this->internal;
     }

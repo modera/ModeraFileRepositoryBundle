@@ -8,16 +8,17 @@ namespace Modera\FileRepositoryBundle\Exceptions;
  */
 class InvalidRepositoryConfig extends \RuntimeException
 {
-    private $missingConfigurationKey;
-    private $config = array();
+    private string $missingConfigurationKey;
 
     /**
-     * @param $missingConfigurationKey
-     * @param array $config
-     *
-     * @return InvalidRepositoryConfig
+     * @var array<mixed>
      */
-    public static function create($missingConfigurationKey, array $config)
+    private array $config = [];
+
+    /**
+     * @param array<mixed> $config
+     */
+    public static function create(string $missingConfigurationKey, array $config): InvalidRepositoryConfig
     {
         $e = new self('This configuration property must be provided: '.$missingConfigurationKey);
         $e->setMissingConfigurationKey($missingConfigurationKey);
@@ -27,33 +28,27 @@ class InvalidRepositoryConfig extends \RuntimeException
     }
 
     /**
-     * @param array $config
+     * @param array<mixed> $config
      */
-    private function setConfig($config)
+    private function setConfig(array $config): void
     {
         $this->config = $config;
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
-    public function getConfig()
+    public function getConfig(): array
     {
         return $this->config;
     }
 
-    /**
-     * @param string $missingConfigurationKey
-     */
-    private function setMissingConfigurationKey($missingConfigurationKey)
+    private function setMissingConfigurationKey(string $missingConfigurationKey): void
     {
         $this->missingConfigurationKey = $missingConfigurationKey;
     }
 
-    /**
-     * @return string
-     */
-    public function getMissingConfigurationKey()
+    public function getMissingConfigurationKey(): string
     {
         return $this->missingConfigurationKey;
     }

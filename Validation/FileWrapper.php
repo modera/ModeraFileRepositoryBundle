@@ -3,44 +3,39 @@
 namespace Modera\FileRepositoryBundle\Validation;
 
 use Symfony\Component\Validator\Constraint;
-use Symfony\Component\Validator\Mapping\ClassMetadata;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
+use Symfony\Component\Validator\Mapping\ClassMetadata;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * Simplifies file validation using native Symfony constraints.
  *
- * @link http://symfony.com/doc/current/book/validation.html#file-constraints
+ * @see http://symfony.com/doc/current/book/validation.html#file-constraints
  *
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
  * @copyright 2015 Modera Foundation
  */
 class FileWrapper
 {
-    /**
-     * @var \SplFileInfo
-     */
-    protected $file;
+    protected \SplFileInfo $file;
 
     /**
-     * @var array
+     * @var Constraint[]
      */
-    protected static $constraints = array();
+    protected static array $constraints = [];
 
     /**
      * @param \SplFileInfo $file        A file that is being uploaded to a repository
-     * @param array        $constraints Instances of \Symfony\Component\Validator\Constraint
+     * @param Constraint[] $constraints Instances of \Symfony\Component\Validator\Constraint
      */
-    public function __construct(\SplFileInfo $file, array $constraints = array())
+    public function __construct(\SplFileInfo $file, array $constraints = [])
     {
         $this->file = $file;
         self::$constraints = $constraints;
     }
 
-    /**
-     * @return \SplFileInfo
-     */
-    public function getFile()
+    public function getFile(): \SplFileInfo
     {
         return $this->file;
     }
@@ -48,7 +43,7 @@ class FileWrapper
     /**
      * @return Constraint[]
      */
-    public function getConstraints()
+    public function getConstraints(): array
     {
         return self::$constraints;
     }
@@ -56,11 +51,11 @@ class FileWrapper
     /**
      * Adds an Image constraint.
      *
-     * @link http://symfony.com/doc/current/reference/constraints/File.html
+     * @see http://symfony.com/doc/current/reference/constraints/File.html
      *
-     * @param array $options
+     * @param array<mixed> $options
      */
-    public function addImageConstraint(array $options = array())
+    public function addImageConstraint(array $options = []): void
     {
         self::$constraints[] = new Assert\Image($options);
     }
@@ -68,31 +63,24 @@ class FileWrapper
     /**
      * Adds a File constraint.
      *
-     * @link http://symfony.com/doc/current/reference/constraints/Image.html
+     * @see http://symfony.com/doc/current/reference/constraints/Image.html
      *
-     * @param array $options
+     * @param array<mixed> $options
      */
-    public function addFileConstraint(array $options = array())
+    public function addFileConstraint(array $options = []): void
     {
         self::$constraints[] = new Assert\File($options);
     }
 
-    /**
-     * @param ValidatorInterface $validator
-     *
-     * @return \Symfony\Component\Validator\ConstraintViolationListInterface
-     */
-    public function validate(ValidatorInterface $validator)
+    public function validate(ValidatorInterface $validator): ConstraintViolationListInterface
     {
         return $validator->validate($this);
     }
 
     /**
      * @private
-     *
-     * @param ClassMetadata $metadata
      */
-    public static function loadValidatorMetadata(ClassMetadata $metadata)
+    public static function loadValidatorMetadata(ClassMetadata $metadata): void
     {
         foreach (self::$constraints as $constraint) {
             $metadata->addPropertyConstraint('file', $constraint);

@@ -12,31 +12,22 @@ use Symfony\Component\HttpFoundation\File\File;
  */
 class NotImageGivenException extends \RuntimeException
 {
-    /**
-     * @var File
-     */
-    private $failedFile;
+    private File $failedFile;
 
-    /**
-     * @return File
-     */
-    public function getFailedFile()
+    public function getFailedFile(): File
     {
         return $this->failedFile;
     }
 
-    /**
-     * @param File $file
-     *
-     * @return NotImageGivenException
-     */
-    public static function create(File $file)
+    public static function create(File $file): self
     {
-        $msg = sprintf(
-            'File "%s" is not an image, expected mime type is image/*, given - ', $file->getPathname(), $file->getMimeType()
+        $msg = \sprintf(
+            'File "%s" is not an image, expected mime type is image/*, given - "%s"',
+            $file->getPathname(),
+            $file->getMimeType()
         );
 
-        $me = new static($msg);
+        $me = new self($msg);
         $me->failedFile = $file;
 
         return $me;

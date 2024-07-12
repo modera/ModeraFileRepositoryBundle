@@ -3,14 +3,15 @@
 namespace Modera\FileRepositoryBundle\Controller;
 
 use Doctrine\Persistence\ObjectRepository;
+use Modera\FileRepositoryBundle\DependencyInjection\ModeraFileRepositoryExtension;
+use Modera\FileRepositoryBundle\Entity\StoredFile;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController as Controller;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
-use Symfony\Component\HttpFoundation\File\MimeType\ExtensionGuesser;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController as Controller;
+use Symfony\Component\Mime\MimeTypes;
 use Symfony\Component\Routing\Annotation\Route;
-use Modera\FileRepositoryBundle\Entity\StoredFile;
-use Modera\FileRepositoryBundle\DependencyInjection\ModeraFileRepositoryExtension;
 
 /**
  * @author    Sergei Vizel <sergei.vizel@modera.org>
@@ -18,17 +19,23 @@ use Modera\FileRepositoryBundle\DependencyInjection\ModeraFileRepositoryExtensio
  */
 class StoredFileController extends Controller
 {
+    protected function getContainer(): ContainerInterface
+    {
+        /** @var ContainerInterface $container */
+        $container = $this->container;
+
+        return $container;
+    }
+
     /**
      * @Route("/{storageKey}", name="modera_file_repository.get_file", requirements={"storageKey" = ".+"})
-     *
-     * @param Request $request
-     * @param $storageKey
-     *
-     * @return Response
      */
-    public function getAction(Request $request, $storageKey)
+    public function getAction(Request $request, string $storageKey): Response
     {
-        if (!$this->container->getParameter(ModeraFileRepositoryExtension::CONFIG_KEY.'.controller.is_enabled')) {
+        /** @var bool $isEnabled */
+        $isEnabled = $this->getContainer()->getParameter(ModeraFileRepositoryExtension::CONFIG_KEY.'.controller.is_enabled');
+
+        if (!$isEnabled) {
             throw $this->createAccessDeniedException();
         }
 
@@ -37,51 +44,45 @@ class StoredFileController extends Controller
 
     /**
      * @internal
-     *
-     * @param string $storageKey
-     *
-     * @return null|StoredFile
      */
-    protected function getFile($storageKey)
+    protected function getFile(string $storageKey): ?StoredFile
     {
-        /* @var ObjectRepository $repository */
+        /** @var ObjectRepository $repository */
         $repository = $this->getDoctrine()->getManager()->getRepository(StoredFile::class);
 
-        return $repository->findOneBy(array(
+        /** @var ?StoredFile $file */
+        $file = $repository->findOneBy([
             'storageKey' => $storageKey,
-        ));
+        ]);
+
+        return $file;
     }
 
     /**
      * @internal
-     *
-     * @param Request $request
-     * @param $storageKey
-     *
-     * @return Response
      */
-    protected function createFileResponse(Request $request, $storageKey)
+    protected function createFileResponse(Request $request, string $storageKey): Response
     {
         $response = new Response();
 
-        $parts = explode('/', $storageKey);
+        $parts = \explode('/', $storageKey);
 
         $file = $this->getFile($parts[0]);
         if (!$file) {
             return $response->setContent('File not found.')->setStatusCode(Response::HTTP_NOT_FOUND);
         }
 
-        if ($request->get('dl') !== null) {
+        if (null !== $request->get('dl')) {
             $filename = $file->getFilename();
-            if (count($parts) > 1) {
-                $filename = $parts[count($parts) - 1];
+            if (\count($parts) > 1) {
+                $filename = $parts[\count($parts) - 1];
             }
 
-            $filenameFallback = filter_var($filename, FILTER_SANITIZE_URL);
+            $filenameFallback = \filter_var($filename, FILTER_SANITIZE_URL) ?: '';
             if ($filenameFallback != $filename) {
-                $guesser = ExtensionGuesser::getInstance();
-                $extension = filter_var(
-                    $guesser->guess($file->getMimeType()) ?: $file->getExtension(), FILTER_SANITIZE_URL
+                $extension = \filter_var(
+                    MimeTypes::getDefault()->getExtensions($file->getMimeType() ?? '')[0] ?? $file->getExtension(),
+                    FILTER_SANITIZE_URL
                 );
                 $filenameFallback = $file->getStorageKey().($extension ? '.'.$extension : '');
             }
@@ -89,14 +90,16 @@ class StoredFileController extends Controller
             $response->headers->set(
                 'Content-Disposition',
                 $response->headers->makeDisposition(
-                    ResponseHeaderBag::DISPOSITION_ATTACHMENT, $filename, $filenameFallback
+                    ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+                    $filename,
+                    $filenameFallback
                 )
             );
         } else {
-            $response->setCache(array(
+            $response->setCache([
                 'etag' => $file->getStorageKey(),
                 'last_modified' => $file->getCreatedAt(),
-            ));
+            ]);
 
             if ($response->isNotModified($request)) {
                 return $response;
@@ -105,7 +108,7 @@ class StoredFileController extends Controller
 
         $response->setContent($file->getContents());
         $response->headers->set('Content-type', $file->getMimeType());
-        $response->headers->set('Content-length', $file->getSize());
+        $response->headers->set('Content-length', (string) $file->getSize());
 
         return $response;
     }

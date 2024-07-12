@@ -3,10 +3,8 @@
 namespace Modera\FileRepositoryBundle\Validation;
 
 use Modera\FileRepositoryBundle\Entity\Repository;
-use Modera\FileRepositoryBundle\Entity\StoredFile;
 use Modera\FileRepositoryBundle\Exceptions\FileValidationException;
 use Modera\FileRepositoryBundle\Intercepting\BaseOperationInterceptor;
-use Modera\FileRepositoryBundle\Intercepting\OperationInterceptorInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
@@ -24,23 +22,14 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  */
 class FilePropertiesValidationInterceptor extends BaseOperationInterceptor
 {
-    /**
-     * @var ValidatorInterface
-     */
-    private $validator;
+    private ValidatorInterface $validator;
 
-    /**
-     * @param ValidatorInterface $validator
-     */
     public function __construct(ValidatorInterface $validator)
     {
         $this->validator = $validator;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function beforePut(\SplFileInfo $file, Repository $repository)
+    public function beforePut(\SplFileInfo $file, Repository $repository, array $context = []): void
     {
         $config = $repository->getConfig();
 
@@ -48,22 +37,22 @@ class FilePropertiesValidationInterceptor extends BaseOperationInterceptor
         if (isset($config['images_only']) && true === $config['images_only']) {
             $wrapper->addImageConstraint();
         }
-        if (isset($config['max_size']) && '' != $config['max_size']) {
-            $wrapper->addFileConstraint(array(
+        if (isset($config['max_size']) && '' !== $config['max_size']) {
+            $wrapper->addFileConstraint([
                 'maxSize' => $config['max_size'],
-            ));
+            ]);
         }
 
-        if (isset($config['file_constraint']) && is_array($config['file_constraint'])) {
+        if (isset($config['file_constraint']) && \is_array($config['file_constraint'])) {
             $wrapper->addFileConstraint($config['file_constraint']);
         }
-        if (isset($config['image_constraint']) && is_array($config['image_constraint'])) {
+        if (isset($config['image_constraint']) && \is_array($config['image_constraint'])) {
             $wrapper->addImageConstraint($config['image_constraint']);
         }
 
         $errors = $wrapper->validate($this->validator);
 
-        if (count($errors)) {
+        if (\count($errors)) {
             throw FileValidationException::create($file, $errors, $repository);
         }
     }

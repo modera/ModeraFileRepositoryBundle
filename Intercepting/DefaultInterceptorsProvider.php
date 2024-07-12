@@ -20,23 +20,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class DefaultInterceptorsProvider implements InterceptorsProviderInterface
 {
-    /**
-     * @var ContainerInterface
-     */
-    private $container;
+    private ContainerInterface $container;
 
-    /**
-     * @param ContainerInterface $container
-     */
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getInterceptors(Repository $repository)
+    public function getInterceptors(Repository $repository): array
     {
         $interceptors = [];
 
@@ -47,12 +38,14 @@ class DefaultInterceptorsProvider implements InterceptorsProviderInterface
         ];
 
         $config = $repository->getConfig();
-        if (isset($config['interceptors']) && is_array($config['interceptors'])) {
-            $ids = array_merge($ids, $config['interceptors']);
+        if (isset($config['interceptors']) && \is_array($config['interceptors'])) {
+            $ids = \array_merge($ids, $config['interceptors']);
         }
 
         foreach ($ids as $id) {
-            $interceptors[] = $this->container->get($id);
+            /** @var OperationInterceptorInterface $interceptor */
+            $interceptor = $this->container->get($id);
+            $interceptors[] = $interceptor;
         }
 
         return $interceptors;

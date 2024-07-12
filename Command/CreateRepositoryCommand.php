@@ -2,12 +2,12 @@
 
 namespace Modera\FileRepositoryBundle\Command;
 
+use Modera\FileRepositoryBundle\Repository\FileRepository;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Modera\FileRepositoryBundle\Repository\FileRepository;
 
 /**
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
@@ -24,10 +24,7 @@ class CreateRepositoryCommand extends Command
         parent::__construct();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('modera:file-repository:create')
@@ -62,15 +59,12 @@ class CreateRepositoryCommand extends Command
             );
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $config = array(
+        $config = [
             'filesystem' => $input->getArgument('filesystem'),
             'overwrite_files' => $input->getOption('overwrite-files'),
-        );
+        ];
 
         $keyGenerator = $input->getOption('key-generator');
         $preserveExtensions = $input->getOption('preserve-extensions');
@@ -102,7 +96,7 @@ class CreateRepositoryCommand extends Command
             $config['storage_key_generator'] = 'modera_file_repository.repository.uniqid_key_generator_preserved_extension';
         }
 
-        if (null != $keyGenerator) {
+        if (null !== $keyGenerator) {
             $config['storage_key_generator'] = $keyGenerator;
         }
 
@@ -113,7 +107,13 @@ class CreateRepositoryCommand extends Command
             $config['max_size'] = $input->getOption('max-size');
         }
 
-        $repository = $this->fr->createRepository($input->getArgument('name'), $config, $input->getArgument('label'));
+        /** @var string $name */
+        $name = $input->getArgument('name');
+
+        /** @var ?string $label */
+        $label = $input->getArgument('label');
+
+        $repository = $this->fr->createRepository($name, $config, $label);
 
         $output->writeln(
             ' <info>Success!</info> Repository has been successfully created! Its internal is #'.$repository->getId()

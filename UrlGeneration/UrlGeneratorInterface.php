@@ -10,11 +10,5 @@ use Modera\FileRepositoryBundle\Entity\StoredFile;
  */
 interface UrlGeneratorInterface
 {
-    /**
-     * @param StoredFile $storedFile
-     * @param $type
-     *
-     * @return string
-     */
-    public function generateUrl(StoredFile $storedFile, $type);
+    public function generateUrl(StoredFile $storedFile, int $type): string;
 }

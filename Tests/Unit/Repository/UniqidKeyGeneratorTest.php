@@ -5,7 +5,7 @@ namespace Modera\FileRepositoryBundle\Tests\Unit\Repository;
 use Modera\FileRepositoryBundle\Repository\UniqidKeyGenerator;
 
 /**
- * @author Sergei Lissovski <sergei.lissovski@gmail.com>
+ * @author Sergei Lissovski <sergei.lissovski@modera.org>
  */
 class UniqidKeyGeneratorTest extends \PHPUnit\Framework\TestCase
 {

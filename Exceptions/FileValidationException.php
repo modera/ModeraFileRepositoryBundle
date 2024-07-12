@@ -12,31 +12,21 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
  */
 class FileValidationException extends \RuntimeException
 {
-    /**
-     * @var \SplFileInfo
-     */
-    private $validatedFile;
+    private \SplFileInfo $validatedFile;
+
+    private ?Repository $repository;
 
     /**
-     * @var ConstraintViolationListInterface
+     * @var string[]
      */
-    private $errors;
+    private array $errors;
 
     /**
-     * @var Repository
+     * @param ConstraintViolationListInterface|ConstraintViolationInterface[]|string[] $errors
      */
-    private $repository;
-
-    /**
-     * @param \SplFileInfo                                                          $validatedFile
-     * @param ConstraintViolationListInterface|ConstraintViolationInterface[]|array $errors
-     * @param Repository|null                                                       $repository
-     *
-     * @return FileValidationException
-     */
-    public static function create(\SplFileInfo $validatedFile, $errors, Repository $repository = null)
+    public static function create(\SplFileInfo $validatedFile, $errors, ?Repository $repository = null): self
     {
-        $parsedErrors = array();
+        $parsedErrors = [];
         foreach ($errors as $error) {
             if ($error instanceof ConstraintViolationInterface) {
                 $parsedErrors[] = $error->getMessage();
@@ -45,34 +35,28 @@ class FileValidationException extends \RuntimeException
             }
         }
 
-        $me = new static('File validation failed: '.implode(', ', $parsedErrors));
+        $me = new self('File validation failed: '.\implode(', ', $parsedErrors));
         $me->validatedFile = $validatedFile;
-        $me->errors = $errors;
+        $me->errors = $parsedErrors;
         $me->repository = $repository;
 
         return $me;
     }
 
-    /**
-     * @return \SplFileInfo
-     */
-    public function getValidatedFile()
+    public function getValidatedFile(): \SplFileInfo
     {
         return $this->validatedFile;
     }
 
     /**
-     * @return ConstraintViolationListInterface
+     * @return string[]
      */
-    public function getErrors()
+    public function getErrors(): array
     {
         return $this->errors;
     }
 
-    /**
-     * @return Repository
-     */
-    public function getRepository()
+    public function getRepository(): ?Repository
     {
         return $this->repository;
     }

@@ -7,10 +7,7 @@ namespace Modera\FileRepositoryBundle\Repository;
  */
 class AsIsKeyGenerator implements StorageKeyGeneratorInterface
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function generateStorageKey(\SplFileInfo $file, array $context = array())
+    public function generateStorageKey(\SplFileInfo $file, array $context = []): string
     {
         return $file->getFilename();
     }

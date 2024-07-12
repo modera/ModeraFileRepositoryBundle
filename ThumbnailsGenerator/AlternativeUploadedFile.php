@@ -17,10 +17,7 @@ class AlternativeUploadedFile extends UploadedFile
 {
     use AlternativeFileTrait;
 
-    /**
-     * @var int
-     */
-    private $size;
+    private ?int $size = null;
 
     /**
      * Returns the file size.
@@ -29,21 +26,23 @@ class AlternativeUploadedFile extends UploadedFile
      * Then it should not be considered as a safe value.
      *
      * @deprecated since Symfony 4.1, use getSize() instead.
-     *
-     * @return int|null The file sizes
      */
-    public function getClientSize()
+    public function getClientSize(): ?int
     {
-        @trigger_error(sprintf('The "%s()" method is deprecated since Symfony 4.1. Use getSize() instead.', __METHOD__), E_USER_DEPRECATED);
+        @\trigger_error(\sprintf('The "%s()" method is deprecated since Symfony 4.1. Use getSize() instead.', __METHOD__), E_USER_DEPRECATED);
 
-        return $this->size ?: $this->getSize();
+        $size = $this->size ?: $this->getSize();
+        if (false === $size) {
+            $size = null;
+        }
+
+        return $size;
     }
 
     /**
      * @internal
-     * @param int|null $size
      */
-    public function setClientSize($size = null)
+    public function setClientSize(?int $size = null): void
     {
         $this->size = $size;
     }
@@ -53,10 +52,16 @@ class AlternativeUploadedFile extends UploadedFile
      * should omit any validation (originally it checks if file is uploaded and in case of thumbnails this will
      * fail by definition, because we create them manually).
      */
-    public function isValid()
+    public function isValid(): bool
     {
         $original = $this->getOriginalFile();
 
-        return $original instanceof File ? $original->isValid() : true;
+        if ($original instanceof File) {
+            if (\method_exists($original, 'isValid')) {
+                return $original->isValid();
+            }
+        }
+
+        return true;
     }
 }

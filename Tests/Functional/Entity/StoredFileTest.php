@@ -18,27 +18,21 @@ class StoredFileTest extends FunctionalTestCase
 {
     private static $st;
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function doSetUpBeforeClass()
+    public static function doSetUpBeforeClass(): void
     {
         self::$st = new SchemaTool(self::$em);
-        self::$st->createSchema(array(
+        self::$st->createSchema([
             self::$em->getClassMetadata(Repository::class),
             self::$em->getClassMetadata(StoredFile::class),
-        ));
+        ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function doTearDownAfterClass()
+    public static function doTearDownAfterClass(): void
     {
-        self::$st->dropSchema(array(
+        self::$st->dropSchema([
             self::$em->getClassMetadata(Repository::class),
             self::$em->getClassMetadata(StoredFile::class),
-        ));
+        ]);
     }
 
     /**
@@ -47,7 +41,7 @@ class StoredFileTest extends FunctionalTestCase
     public function testDeletingEntityWithoutPhysicalFile()
     {
         /* @var FileRepository $fr */
-        $fr = self::$container->get('modera_file_repository.repository.file_repository');
+        $fr = self::getContainer()->get('modera_file_repository.repository.file_repository');
 
         $repoName = 'dummy_repository2';
 
@@ -79,7 +73,7 @@ class StoredFileTest extends FunctionalTestCase
     public function testDeletingEntityWithoutPhysicalFileDenied()
     {
         /* @var FileRepository $fr */
-        $fr = self::$container->get('modera_file_repository.repository.file_repository');
+        $fr = self::getContainer()->get('modera_file_repository.repository.file_repository');
 
         $repoName = 'dummy_repository3';
 

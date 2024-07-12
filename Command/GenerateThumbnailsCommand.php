@@ -3,6 +3,12 @@
 namespace Modera\FileRepositoryBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Modera\FileRepositoryBundle\Entity\StoredFile;
+use Modera\FileRepositoryBundle\Repository\FileRepository;
+use Modera\FileRepositoryBundle\ThumbnailsGenerator\EmulatedUploadedFile;
+use Modera\FileRepositoryBundle\ThumbnailsGenerator\Interceptor;
+use Modera\FileRepositoryBundle\ThumbnailsGenerator\NotImageGivenException;
+use Modera\FileRepositoryBundle\ThumbnailsGenerator\ThumbnailsGenerator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
@@ -10,12 +16,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\HttpFoundation\File\File;
-use Modera\FileRepositoryBundle\ThumbnailsGenerator\NotImageGivenException;
-use Modera\FileRepositoryBundle\ThumbnailsGenerator\EmulatedUploadedFile;
-use Modera\FileRepositoryBundle\ThumbnailsGenerator\ThumbnailsGenerator;
-use Modera\FileRepositoryBundle\ThumbnailsGenerator\Interceptor;
-use Modera\FileRepositoryBundle\Repository\FileRepository;
-use Modera\FileRepositoryBundle\Entity\StoredFile;
 
 /**
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
@@ -38,10 +38,7 @@ class GenerateThumbnailsCommand extends Command
         parent::__construct();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('modera:file-repository:generate-thumbnails')
@@ -69,40 +66,40 @@ class GenerateThumbnailsCommand extends Command
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $repository = $this->fr->getRepository($input->getArgument('repository'));
+        /** @var string $name */
+        $name = $input->getArgument('repository');
+        $repository = $this->fr->getRepository($name);
         if (!$repository) {
-            throw new \RuntimeException(sprintf(
-                'Unable to find a repository with name "%s"', $input->getArgument('repository')
-            ));
+            throw new \RuntimeException(\sprintf('Unable to find a repository with name "%s"', $name));
         }
 
+        /** @var string[] $expectedThumbnailsConfig */
         $expectedThumbnailsConfig = $input->getOption('thumbnail');
 
         // indexed by original file's ID
-        $report = array();
+        $report = [];
 
         // fetching original files
-        $query = sprintf('SELECT e.id FROM %s e WHERE e.alternativeOf IS NULL AND e.repository = ?0', StoredFile::class);
+        $query = \sprintf('SELECT e.id FROM %s e WHERE e.alternativeOf IS NULL AND e.repository = ?0', StoredFile::class);
         $query = $this->em->createQuery($query);
         $query->setParameter(0, $repository);
 
         foreach ($query->getArrayResult() as $fileData) {
+            /** @var array{'id': int} $fileData */
             $originalId = $fileData['id'];
 
             $existingThumbnails = [];
             $missingThumbnails = [];
 
             // fetching original file's alternatives
-            $alternativesQuery = $this->em->createQuery(sprintf('SELECT e.id, e.meta FROM %s e WHERE e.alternativeOf = ?0', StoredFile::class));
+            $alternativesQuery = $this->em->createQuery(\sprintf('SELECT e.id, e.meta FROM %s e WHERE e.alternativeOf = ?0', StoredFile::class));
             $alternativesQuery->setParameter(0, $fileData['id']);
 
             foreach ($alternativesQuery->getArrayResult() as $alternativeData) {
-                if (isset($alternativeData['meta']['thumbnail'])) {
+                $isArray = \is_array($alternativeData ?? null) && \is_array($alternativeData['meta'] ?? null);
+                if ($isArray && isset($alternativeData['meta']['thumbnail'])) {
                     $thumbnailConfig = $alternativeData['meta']['thumbnail'];
 
                     if (isset($thumbnailConfig['width']) && isset($thumbnailConfig['height'])) {
@@ -112,18 +109,18 @@ class GenerateThumbnailsCommand extends Command
             }
 
             foreach ($expectedThumbnailsConfig as $expectedThumbnailDimensions) {
-                if (!in_array($expectedThumbnailDimensions, $existingThumbnails)) {
+                if (!\in_array($expectedThumbnailDimensions, $existingThumbnails)) {
                     $missingThumbnails[] = $expectedThumbnailDimensions;
                 }
             }
 
-            $report[$originalId] = array(
+            $report[$originalId] = [
                 'existing' => $existingThumbnails,
                 'missing' => $missingThumbnails,
-            );
+            ];
         }
 
-        if (count($report) == 0) {
+        if (0 === \count($report)) {
             $output->writeln('No thumbnails to generate');
 
             return 0;
@@ -134,11 +131,11 @@ class GenerateThumbnailsCommand extends Command
             $rows = [];
 
             foreach ($report as $id => $entry) {
-                /* @var StoredFile $storedFile */
+                /** @var StoredFile $storedFile */
                 $storedFile = $this->em->getRepository(StoredFile::class)->find($id);
 
-                $missingOnes = count($entry['missing']) > 0 ? implode(', ', $entry['missing']) : '-';
-                $existingOnes = count($entry['existing']) > 0 ? implode(', ', $entry['existing']) : '-';
+                $missingOnes = \count($entry['missing']) > 0 ? \implode(', ', $entry['missing']) : '-';
+                $existingOnes = \count($entry['existing']) > 0 ? \implode(', ', $entry['existing']) : '-';
 
                 $rows[] = [$id, $storedFile->getFilename(), $missingOnes, $existingOnes];
             }
@@ -152,21 +149,22 @@ class GenerateThumbnailsCommand extends Command
         }
 
         foreach ($report as $id => $entry) {
-            /* @var StoredFile $originalStoredFile */
+            /** @var StoredFile $originalStoredFile */
             $originalStoredFile = $this->em->getRepository(StoredFile::class)->find($id);
 
-            $output->writeln(sprintf(' # Processing (%d) %s', $originalStoredFile->getId(), $originalStoredFile->getFilename()));
+            $output->writeln(\sprintf(' # Processing (%d) %s', $originalStoredFile->getId(), $originalStoredFile->getFilename()));
 
             foreach ($entry['missing'] as $dimensions) {
-                list($width, $height) = explode('x', $dimensions);
+                list($width, $height) = \explode('x', $dimensions);
 
-                $originalPathname = tempnam(sys_get_temp_dir(), 'file_');
-                file_put_contents($originalPathname, $originalStoredFile->getContents());
+                /** @var string $originalPathname */
+                $originalPathname = \tempnam(\sys_get_temp_dir(), 'file_');
+                \file_put_contents($originalPathname, $originalStoredFile->getContents());
 
                 $image = new File($originalPathname);
 
                 try {
-                    $thumbnailPathname = $this->generator->generate($image, $width, $height);
+                    $thumbnailPathname = $this->generator->generate($image, (int) $width, (int) $height);
                 } catch (NotImageGivenException $e) {
                     $output->writeln('  * Skipping, file is not an image.');
 
@@ -179,48 +177,47 @@ class GenerateThumbnailsCommand extends Command
                     $thumbnailPathname,
                     $originalStoredFile->getFilename(),
                     $originalStoredFile->getMimeType(),
-                    filesize($thumbnailPathname)
                 );
 
                 $thumbnailStoredFile = $this->fr->put(
                     $repository->getName(),
                     $thumbnailFile,
-                    array(
+                    [
                         'put_interceptor_filter' => function ($itc) {
                             // we are disabling thumbnails-generator-filter because if
                             // a repository has already this interceptor configured then putting thumbnails
                             // into repository will result in attempts to generate thumbnails for thumbnails ...
                             return !$itc instanceof Interceptor;
                         },
-                    )
+                    ]
                 );
 
                 $this->generator->updateStoredFileAlternativeMeta(
                     $thumbnailStoredFile,
-                    array('width' => $width, 'height' => $height)
+                    ['width' => $width, 'height' => $height]
                 );
 
                 $originalStoredFile->addAlternative($thumbnailStoredFile);
 
                 // we don't need to keep a temporary file because file-repository by now should have
                 // already stored a thumbnail file in its FS
-                unlink($thumbnailPathname);
+                \unlink($thumbnailPathname);
 
                 $this->em->flush();
 
-                $output->writeln(sprintf('  * %dx%d', $width, $height));
+                $output->writeln(\sprintf('  * %dx%d', $width, $height));
             }
         }
 
-        if ($input->getOption('update-config') == true) {
+        if (true === $input->getOption('update-config')) {
             $isInterceptorAdded = false;
             $isThumbnailConfigUpdated = false;
 
             $repositoryConfig = $repository->getConfig();
-            if (!isset($repositoryConfig['interceptors'])) {
+            if (!is_array($repositoryConfig['interceptors'] ?? null)) {
                 $repositoryConfig['interceptors'] = [];
             }
-            if (!in_array(Interceptor::ID, $repositoryConfig['interceptors'])) {
+            if (!\in_array(Interceptor::ID, $repositoryConfig['interceptors'])) {
                 $repositoryConfig['interceptors'][] = Interceptor::ID;
 
                 $isInterceptorAdded = true;
@@ -238,13 +235,13 @@ class GenerateThumbnailsCommand extends Command
             }
 
             foreach ($expectedThumbnailsConfig as $dimensions) {
-                list($width, $height) = explode('x', $dimensions);
+                list($width, $height) = \explode('x', $dimensions);
 
-                if (!in_array($dimensions, $existingThumbnailsConfigEntries)) {
-                    $repositoryConfig['thumbnail_sizes'][] = array(
+                if (!\in_array($dimensions, $existingThumbnailsConfigEntries)) {
+                    $repositoryConfig['thumbnail_sizes'][] = [
                         'width' => $width,
                         'height' => $height,
-                    );
+                    ];
 
                     $isThumbnailConfigUpdated = true;
                 }

@@ -3,11 +3,11 @@
 namespace Modera\FileRepositoryBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Modera\FileRepositoryBundle\Entity\StoredFile;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Modera\FileRepositoryBundle\Entity\StoredFile;
 
 /**
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
@@ -24,10 +24,7 @@ class DownloadFileCommand extends Command
         parent::__construct();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('modera:file-repository:download-file')
@@ -37,29 +34,32 @@ class DownloadFileCommand extends Command
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        /* @var StoredFile $storedFile */
-        $storedFile = $this->em->getRepository(StoredFile::class)->find($input->getArgument('file_id'));
+        /** @var int|string $fileId */
+        $fileId = $input->getArgument('file_id');
+
+        /** @var ?StoredFile $storedFile */
+        $storedFile = $this->em->getRepository(StoredFile::class)->find($fileId);
         if (!$storedFile) {
-            throw new \RuntimeException(sprintf('Unable to find a file with ID "%s".', $input->getArgument('file_id')));
+            throw new \RuntimeException(\sprintf('Unable to find a file with ID "%s".', $fileId));
         }
 
+        /** @var string $localPath */
         $localPath = $input->getArgument('local_path');
 
         $output->writeln('Downloading the file ...');
 
-        ob_start();
-        $result = file_put_contents($localPath, $storedFile->getContents());
-        $errorOutput = ob_get_clean();
+        \ob_start();
+        $result = \file_put_contents($localPath, $storedFile->getContents());
+        /** @var string $errorOutput */
+        $errorOutput = \ob_get_clean();
 
         if (false !== $result) {
-            $output->writeln(sprintf(
+            $output->writeln(\sprintf(
                 '<info>File from repository "%s" has been successfully downloaded and stored locally at %s</info>',
-                $storedFile->getRepository()->getName(), $localPath
+                $storedFile->getRepository()->getName(),
+                $localPath
             ));
         } else {
             $output->writeln('<error>Something went wrong, we were unable to save a file locally: </error>');

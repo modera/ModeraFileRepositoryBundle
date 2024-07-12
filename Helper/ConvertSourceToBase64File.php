@@ -20,17 +20,30 @@ use Symfony\Component\Mime\MimeTypes;
  * } else {
  *     $file = ConvertSourceToBase64File::fromFile($source);
  * }
- *
  */
-class ConvertSourceToBase64File
+final class ConvertSourceToBase64File
 {
+    /**
+     * @param array{
+     *     'mimeType'?: string,
+     *     'fileContent'?: string,
+     *     'fileName'?: string,
+     * } $source
+     */
     public static function fromArray(array $source): ?Base64File
     {
-        $required = [ 'mimeType', 'fileContent' ];
+        $required = ['mimeType', 'fileContent'];
         if (\count(\array_intersect_key(\array_flip($required), $source)) === \count($required)) {
+            /** @var array{
+             *     'mimeType': string,
+             *     'fileContent': string,
+             *     'fileName'?: string
+             * } $source */
             $base64 = \sprintf('data:%s;base64,%s', $source['mimeType'], $source['fileContent']);
+
             return new Base64File($base64, $source['fileName'] ?? static::generateFilename($base64));
         }
+
         return null;
     }
 
@@ -38,7 +51,9 @@ class ConvertSourceToBase64File
     {
         try {
             return new Base64File($source, static::generateFilename($source));
-        } catch(\UnexpectedValueException $e) {}
+        } catch (\UnexpectedValueException $e) {
+        }
+
         return null;
     }
 
@@ -48,6 +63,7 @@ class ConvertSourceToBase64File
         if ($base64) {
             return new Base64File($base64, static::extractFilename($source) ?? static::generateFilename($base64));
         }
+
         return null;
     }
 
@@ -57,12 +73,16 @@ class ConvertSourceToBase64File
         if ($base64) {
             return new Base64File($base64, static::extractFilename($source) ?? static::generateFilename($base64));
         }
+
         return null;
     }
 
     private static function generateFilename(string $base64): string
     {
-        return \implode('.', \array_filter(\array_map('trim', [
+        /** @var callable $callback */
+        $callback = 'trim';
+
+        return \implode('.', \array_filter(\array_map($callback, [
             \sprintf('%d', \time()),
             Base64File::extractExtension($base64),
         ])));
@@ -72,6 +92,7 @@ class ConvertSourceToBase64File
     {
         $url = \parse_url($source);
         $filename = isset($url['path']) ? \basename($url['path']) : null;
+
         return $filename ?: null;
     }
 
@@ -93,22 +114,24 @@ class ConvertSourceToBase64File
                 return \sprintf('data:%s;base64,%s', $mimeType, \base64_encode($contents));
             }
         }
+
         return null;
     }
 
     private static function fetchAsBase64(string $source): ?string
     {
-        $context = \stream_context_create(array(
-            'http' => array(
+        $context = \stream_context_create([
+            'http' => [
                 'ignore_errors' => true,
-            ),
-        ));
+            ],
+        ]);
         if ($contents = \file_get_contents($source, false, $context) ?: null) {
-            if (isset($http_response_header) && is_array($http_response_header)) {
+            /** @var ?string[] $http_response_header */
+            if (isset($http_response_header) && \is_array($http_response_header) && \count($http_response_header)) {
                 \preg_match('{HTTP\/\S*\s(\d{3})}', \array_shift($http_response_header), $matches);
                 $status = (int) $matches[1];
-                if ($status === Response::HTTP_OK) {
-                    $headers = array();
+                if (Response::HTTP_OK === $status) {
+                    $headers = [];
                     foreach ($http_response_header as $value) {
                         if (false !== ($matches = \explode(':', $value, 2))) {
                             $headers[\trim($matches[0])] = \trim($matches[1]);
@@ -131,6 +154,7 @@ class ConvertSourceToBase64File
                 }
             }
         }
+
         return null;
     }
 }

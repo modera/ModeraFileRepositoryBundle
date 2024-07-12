@@ -14,9 +14,7 @@ use Modera\FileRepositoryBundle\Entity\Repository;
 interface InterceptorsProviderInterface
 {
     /**
-     * @param Repository $repository
-     *
      * @return OperationInterceptorInterface[]
      */
-    public function getInterceptors(Repository $repository);
+    public function getInterceptors(Repository $repository): array;
 }

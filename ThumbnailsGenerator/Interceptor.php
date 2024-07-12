@@ -27,72 +27,63 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  */
 class Interceptor extends BaseOperationInterceptor
 {
-    const ID = 'modera_file_repository.interceptors.thumbnails_generator.interceptor';
+    public const ID = 'modera_file_repository.interceptors.thumbnails_generator.interceptor';
 
-    // internal; this flags are used to facilitate testing
-    const RESULT_NO_CONFIG_AVAILABLE = 'no_config_available';
-    const RESULT_NOT_IMAGE_GIVEN = 'not_image_given';
-    const RESULT_NO_MORE_THUMBNAILS = 'no_more_thumbnails';
-    const RESULT_SCHEDULED = 'scheduled';
+    // internal; these flags are used to facilitate testing
+    public const RESULT_NO_CONFIG_AVAILABLE = 'no_config_available';
+    public const RESULT_NOT_IMAGE_GIVEN = 'not_image_given';
+    public const RESULT_NO_MORE_THUMBNAILS = 'no_more_thumbnails';
+    public const RESULT_SCHEDULED = 'scheduled';
 
-    /**
-     * @var FileRepository
-     */
-    private $fileRepository;
+    private FileRepository $fileRepository;
 
-    /**
-     * @var ThumbnailsGenerator
-     */
-    private $thumbnailsGenerator;
+    private ThumbnailsGenerator $thumbnailsGenerator;
 
     /**
      * Indexed by original's pathname.
      *
-     * @var array
+     * @var array<string, array<mixed>>
      */
-    private $thumbnailsProgress = array();
+    private array $thumbnailsProgress = [];
 
-    /**
-     * @param FileRepository      $fileRepository
-     * @param ThumbnailsGenerator $thumbnailsGenerator
-     */
     public function __construct(FileRepository $fileRepository, ThumbnailsGenerator $thumbnailsGenerator)
     {
         $this->fileRepository = $fileRepository;
         $this->thumbnailsGenerator = $thumbnailsGenerator;
     }
 
-    /**
-     * @param \SplFileInfo $file
-     *
-     * @return bool
-     */
-    private function isAlternative(\SplFileInfo $file)
+    private function isAlternative(\SplFileInfo $file): bool
     {
-        return in_array(AlternativeFileTrait::class, class_uses(get_class($file)));
+        return \in_array(AlternativeFileTrait::class, \class_uses(\get_class($file)));
     }
 
     /**
      * This method is going to be invoked recursively to generate thumbnails, classes with AlternativeFileTrait are
      * going to serve as markers that thumbnail needs to be generated.
-     *
-     * {@inheritdoc}
      */
-    public function onPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository)
+    public function onPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository, array $context = []): void
     {
+        $this->doPut($storedFile, $file, $repository);
+    }
+
+    public function doPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository): string
+    {
+        /** @var array{'thumbnail_sizes'?: array<array{'width': int, 'height': int}>} $repoConfig */
         $repoConfig = $storedFile->getRepository()->getConfig();
-        if (!isset($repoConfig['thumbnail_sizes']) || count($repoConfig['thumbnail_sizes']) == 0) {
+
+        if (!isset($repoConfig['thumbnail_sizes']) || 0 === \count($repoConfig['thumbnail_sizes'])) {
             return self::RESULT_NO_CONFIG_AVAILABLE;
         }
 
         $isAlternative = $this->isAlternative($file);
 
-        // given $storedFile and $file could be alternative already so we need to resolve
+        // given $storedFile and $file could be alternative already, so we need to resolve
         // an original file that we are going to use to generate a thumbnail from
         if ($isAlternative) {
-            /* @var AlternativeFileTrait $file */
-            $originalStoredFile = $file->getOriginalStoredFile();
-            $originalFile = $file->getOriginalFile();
+            /** @var AlternativeFile $alternativeFile */
+            $alternativeFile = $file;
+            $originalStoredFile = $alternativeFile->getOriginalStoredFile();
+            $originalFile = $alternativeFile->getOriginalFile();
 
             $originalStoredFile->addAlternative($storedFile);
         } else {
@@ -105,7 +96,7 @@ class Interceptor extends BaseOperationInterceptor
             $originalFile = new File($originalFile->getPathname());
         }
 
-        $isImage = substr($originalFile->getMimeType(), 0, strlen('image/')) == 'image/';
+        $isImage = 'image/' === \substr($originalFile->getMimeType() ?? '', 0, \strlen('image/'));
         if (!$isImage) {
             return self::RESULT_NOT_IMAGE_GIVEN;
         }
@@ -119,14 +110,16 @@ class Interceptor extends BaseOperationInterceptor
             // Taking a config of previously generated thumbnail and updating entity to store it.
             // We couldn't update it right away when we generate a thumbnail because we haven't yet
             // had access to entity
-            $this->thumbnailsGenerator->updateStoredFileAlternativeMeta($storedFile, $file->getThumbnailConfig());
+            /** @var AlternativeFile $alternativeFile */
+            $alternativeFile = $file;
+            $this->thumbnailsGenerator->updateStoredFileAlternativeMeta($storedFile, $alternativeFile->getThumbnailConfig());
         }
 
         // getting next thumbnail's config that needs to be generated
-        $thumbnailConfig = array_shift($this->thumbnailsProgress[$lookupKey]);
+        /** @var ?array{'width': int, 'height': int} $thumbnailConfig */
+        $thumbnailConfig = \array_shift($this->thumbnailsProgress[$lookupKey]);
         if (!$thumbnailConfig) {
-            // making it possible to have thumbnails generated if the same original file is passed to file
-            // repository
+            // making it possible to have thumbnails generated if the same original file is passed to file repository
             unset($this->thumbnailsProgress[$lookupKey]);
 
             return self::RESULT_NO_MORE_THUMBNAILS;
@@ -134,15 +127,17 @@ class Interceptor extends BaseOperationInterceptor
 
         $thumbnailPathname = $this->generateThumbnail($originalFile, $storedFile, $thumbnailConfig);
 
-        /* @var AlternativeFileTrait $newFile */
-        $newFile = null;
         if ($originalFile instanceof UploadedFile) {
             $newFile = new AlternativeUploadedFile(
                 $thumbnailPathname, // we need to save a thumbnail to the same file repository
                 $originalFile->getClientOriginalName() ?: '',
                 $originalFile->getClientMimeType()
             );
-            $newFile->setClientSize(filesize($thumbnailPathname));
+            $size = \filesize($thumbnailPathname);
+            if (false === $size) {
+                $size = null;
+            }
+            $newFile->setClientSize($size);
         } else {
             $newFile = new AlternativeFile($thumbnailPathname);
         }
@@ -160,13 +155,11 @@ class Interceptor extends BaseOperationInterceptor
     /**
      * You can override this method if you need to a more elaborate way how thumbnails are generated.
      *
-     * @param File       $originalFile
-     * @param StoredFile $storedFile
-     * @param array      $config
+     * @param array{'width': int, 'height': int} $config
      *
      * @return string A pathname where thumbnail is saved
      */
-    protected function generateThumbnail(File $originalFile, StoredFile $storedFile, array $config)
+    protected function generateThumbnail(File $originalFile, StoredFile $storedFile, array $config): string
     {
         return $this->thumbnailsGenerator->generate($originalFile, $config['width'], $config['height']);
     }

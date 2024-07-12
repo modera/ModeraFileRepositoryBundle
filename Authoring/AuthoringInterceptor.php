@@ -16,26 +16,15 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
  */
 class AuthoringInterceptor extends BaseOperationInterceptor
 {
-    /**
-     * @var TokenStorageInterface
-     */
-    private $tokenStorage;
+    private TokenStorageInterface $tokenStorage;
 
-    /**
-     * @param TokenStorageInterface $tokenStore
-     */
     public function __construct(TokenStorageInterface $tokenStore)
     {
         $this->tokenStorage = $tokenStore;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function onPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository)
+    public function onPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository, array $context = []): void
     {
-        $context = @func_get_arg(3);
-
         $isAuthorManuallyOverriddenDuringFileCreation = isset($context['author']);
         if ($isAuthorManuallyOverriddenDuringFileCreation) {
             return;
@@ -47,15 +36,22 @@ class AuthoringInterceptor extends BaseOperationInterceptor
         }
 
         $user = $token->getUser();
-        if (!is_object($user)) {
+        if (!\is_object($user)) {
             return;
         }
 
-        $reflClass = new \ReflectionClass(get_class($user));
+        $reflClass = new \ReflectionClass(\get_class($user));
         if ($reflClass->hasMethod('getId') && $reflClass->getMethod('getId')->isPublic()) {
             $reflMethod = $reflClass->getMethod('getId');
 
-            $storedFile->setAuthor($reflMethod->invoke($user));
+            $author = $reflMethod->invoke($user);
+            if (\is_int($author)) {
+                $author = (string) $author;
+            } else {
+                $author = null;
+            }
+
+            $storedFile->setAuthor($author);
         }
     }
 }

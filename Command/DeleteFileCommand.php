@@ -3,11 +3,11 @@
 namespace Modera\FileRepositoryBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Modera\FileRepositoryBundle\Entity\StoredFile;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Modera\FileRepositoryBundle\Entity\StoredFile;
 
 /**
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
@@ -24,10 +24,7 @@ class DeleteFileCommand extends Command
         parent::__construct();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('modera:file-repository:delete-file')
@@ -36,20 +33,18 @@ class DeleteFileCommand extends Command
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        /* @var StoredFile $storedFile */
+        /** @var ?StoredFile $storedFile */
         $storedFile = $this->em->find(StoredFile::class, $input->getArgument('file_id'));
         if (!$storedFile) {
             throw new \RuntimeException('Unable to find a file with ID '.$input->getArgument('file_id'));
         }
 
-        $output->writeln(sprintf(
+        $output->writeln(\sprintf(
             'Deleting file "%s" from repository "%s"',
-            $storedFile->getFilename(), $storedFile->getRepository()->getName()
+            $storedFile->getFilename(),
+            $storedFile->getRepository()->getName()
         ));
 
         $this->em->remove($storedFile);

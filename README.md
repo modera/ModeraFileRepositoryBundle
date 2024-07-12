@@ -67,7 +67,7 @@ Once low-level filesystem is configured you can create a repository that will ma
 ``` php
 <?php
 
-/* @var \Modera\FileRepositoryBundle\Repository\FileRepository $fr */
+/** @var \Modera\FileRepositoryBundle\Repository\FileRepository $fr */
 $fr = $container->get('modera_file_repository.repository.file_repository');
 
 $repositoryConfig = array(
@@ -78,7 +78,7 @@ $fr->createRepository('my_repository', $repositoryConfig, 'My dummy repository')
 
 $dummyFile = new \SplFileInfo('dummy-file.txt');
 
-/* @var \Modera\FileRepositoryBundle\Entity\StoredFile $storedFile */
+/** @var \Modera\FileRepositoryBundle\Entity\StoredFile $storedFile */
 $storedFile = $fr->put('my_repository', $dummyFile);
 ```
 
@@ -129,7 +129,7 @@ are stored in a repository, to enable this feature when creating a new repositor
 ``` php
 <?php
 
-/* @var \Modera\FileRepositoryBundle\Repository\FileRepository $fr */
+/** @var \Modera\FileRepositoryBundle\Repository\FileRepository $fr */
 $fr = $container->get('modera_file_repository.repository.file_repository');
 
 $repositoryConfig = array(

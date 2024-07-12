@@ -2,13 +2,12 @@
 
 namespace Modera\FileRepositoryBundle\Command;
 
+use Modera\FileRepositoryBundle\Repository\FileRepository;
+use Modera\FileRepositoryBundle\Util\StoredFileUtils;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Helper\TableHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Modera\FileRepositoryBundle\Repository\FileRepository;
-use Modera\FileRepositoryBundle\Util\StoredFileUtils;
 
 /**
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
@@ -27,10 +26,7 @@ class ListFilesCommand extends Command
         parent::__construct();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('modera:file-repository:list-files')
@@ -39,28 +35,26 @@ class ListFilesCommand extends Command
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        /** @var string $repositoryName */
         $repositoryName = $input->getArgument('repository-name');
         $repository = $this->fr->getRepository($repositoryName);
 
         if (!$repository) {
-            throw new \RuntimeException(sprintf('Unable to find a repository with given name "%s"!', $repositoryName));
+            throw new \RuntimeException(\sprintf('Unable to find a repository with given name "%s"!', $repositoryName));
         }
 
-        $rows = array();
+        $rows = [];
         foreach ($repository->getFiles() as $storedFile) {
-            $rows[] = array(
+            $rows[] = [
                 $storedFile->getId(),
                 $storedFile->getFilename(),
                 $storedFile->getMimeType(),
                 StoredFileUtils::formatFileSize($storedFile->getSize()),
                 $storedFile->getCreatedAt()->format('d.m.Y H:i'),
                 $storedFile->getOwner(),
-            );
+            ];
         }
 
         $this->renderTable(

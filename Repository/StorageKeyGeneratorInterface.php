@@ -12,9 +12,7 @@ namespace Modera\FileRepositoryBundle\Repository;
 interface StorageKeyGeneratorInterface
 {
     /**
-     * @param \SplFileInfo $file
-     *
-     * @return string
+     * @param array<mixed> $context
      */
-    public function generateStorageKey(\SplFileInfo $file, array $context = array());
+    public function generateStorageKey(\SplFileInfo $file, array $context = []): string;
 }

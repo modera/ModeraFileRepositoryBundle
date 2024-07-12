@@ -2,7 +2,7 @@
 
 namespace Modera\FileRepositoryBundle\Contributions;
 
-use Sli\ExpanderBundle\Ext\ContributorInterface;
+use Modera\ExpanderBundle\Ext\ContributorInterface;
 
 /**
  * @author    Sergei Vizel <sergei.vizel@modera.org>
@@ -10,13 +10,10 @@ use Sli\ExpanderBundle\Ext\ContributorInterface;
  */
 class RoutingResourcesProvider implements ContributorInterface
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function getItems()
+    public function getItems(): array
     {
-        return array(
+        return [
             '@ModeraFileRepositoryBundle/Resources/config/routing.yml',
-        );
+        ];
     }
 }

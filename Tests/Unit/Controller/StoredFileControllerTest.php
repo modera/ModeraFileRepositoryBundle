@@ -9,12 +9,9 @@ use Modera\FileRepositoryBundle\DependencyInjection\ModeraFileRepositoryExtensio
 
 class DummyController extends StoredFileController
 {
-    /**
-     * @var StoredFile
-     */
-    public $storedFile = null;
+    public ?StoredFile $storedFile = null;
 
-    protected function getFile($storageKey)
+    protected function getFile(string $storageKey): ?StoredFile
     {
         return $this->storedFile;
     }

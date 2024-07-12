@@ -2,16 +2,17 @@
 
 namespace Modera\FileRepositoryBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
 use Gaufrette\Exception\FileNotFound;
+use Modera\FileRepositoryBundle\DependencyInjection\ModeraFileRepositoryExtension;
+use Modera\FileRepositoryBundle\File\Base64File;
+use Modera\FileRepositoryBundle\UrlGeneration\UrlGeneratorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Routing\RouterInterface;
-use Modera\FileRepositoryBundle\DependencyInjection\ModeraFileRepositoryExtension;
-use Modera\FileRepositoryBundle\File\Base64File;
-use Modera\FileRepositoryBundle\UrlGeneration\UrlGeneratorInterface;
 
 /**
  * When this entity is removed from database associated with it physical file be automatically removed as well.
@@ -20,7 +21,9 @@ use Modera\FileRepositoryBundle\UrlGeneration\UrlGeneratorInterface;
  * {@class \Modera\FileRepositoryBundle\Repository\FileRepository::put} instead.
  *
  * @ORM\Entity
+ *
  * @ORM\Table("modera_filerepository_storedfile")
+ *
  * @ORM\HasLifecycleCallbacks
  *
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
@@ -30,79 +33,74 @@ class StoredFile
 {
     /**
      * @ORM\Column(type="integer")
+     *
      * @ORM\Id
+     *
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    private ?int $id = null;
 
     /**
-     * @var Repository
-     *
      * @ORM\ManyToOne(targetEntity="Repository", inversedBy="files")
      */
-    private $repository;
+    private ?Repository $repository = null;
 
     /**
      * This is a filename that is used to identify this file in "filesystem".
      *
      * @ORM\Column(type="string", length=255, unique=true)
      */
-    private $storageKey;
+    private ?string $storageKey = null;
 
     /**
      * Full filename. For example - /dir1/dir2/file.txt.
      *
-     * @var string
-     *
      * @ORM\Column(type="string")
      */
-    private $filename;
+    private ?string $filename = null;
 
     /**
      * Some additional metadata you may want to associate with this file.
      *
-     * @ORM\Column(type="array")
+     * @var array<string, mixed>
+     *
+     * @ORM\Column(type="json")
      */
-    private $meta = array();
+    private array $meta = [];
 
     /**
      * Some value that your application logic can understand and identify a user. It could be user entity id, for example.
      *
      * @ORM\Column(type="string", nullable=true)
      */
-    private $author;
+    private ?string $author = null;
 
     /**
      * Some tag that later can be used to figure what/who this stored file belongs to. It can be whatever value that your
      * logic can parse, no restrictions implied.
+     *
+     * @var mixed Mixed value
      */
     private $owner;
 
     /**
      * @ORM\Column(type="datetime")
      */
-    private $createdAt;
+    private ?\DateTimeInterface $createdAt = null;
 
     /**
      * File extension. For example, for file "file.jpg" this field will contain "jpg".
      *
-     * @var string
-     *
      * @ORM\Column(type="string", nullable=true)
      */
-    private $extension;
+    private ?string $extension = null;
 
     /**
-     * @var null|string
-     *
      * @ORM\Column(type="string", nullable=true)
      */
-    private $mimeType;
+    private ?string $mimeType = null;
 
-    /**
-     * @var ContainerInterface
-     */
-    private $container;
+    private ?ContainerInterface $container = null;
 
     /**
      * This field can be used by interceptors if they need to create a linked alternative representation of uploaded file.
@@ -112,14 +110,16 @@ class StoredFile
      *
      * @ORM\ManyToOne(targetEntity="StoredFile", inversedBy="alternatives", cascade={"PERSIST"})
      */
-    private $alternativeOf;
+    private ?StoredFile $alternativeOf = null;
 
     /**
      * @see addAlternative()
      *
+     * @var Collection<int, StoredFile>
+     *
      * @ORM\OneToMany(targetEntity="StoredFile", mappedBy="alternativeOf", cascade={"PERSIST", "REMOVE"})
      */
-    private $alternatives;
+    private ?Collection $alternatives = null;
 
     /**
      * Sometimes it might happen that a physical file has already been deleted when an entity
@@ -127,26 +127,22 @@ class StoredFile
      * an entity without a physical file to be deleted this value is set to TRUE.
      *
      * @see setIgnoreMissingFileOnDelete
-     *
-     * @since 2.56.0
-     *
-     * @var bool
      */
-    private $isMissingFileIgnoredOnDelete = true;
+    private bool $isMissingFileIgnoredOnDelete = true;
 
     /**
-     * @var int
      * @ORM\Column(type="integer")
      */
-    private $position = 0;
+    private int $position = 0;
 
     /**
-     * @param Repository   $repository
-     * @param \SplFileInfo $file
-     * @param array        $context
+     * @param array<mixed> $context
      */
-    public function __construct(Repository $repository, \SplFileInfo $file, array $context = array())
+    public function __construct(Repository $repository, \SplFileInfo $file, array $context = [])
     {
+        $this->getAlternatives();
+        $this->getCreatedAt();
+
         $this->repository = $repository;
 
         $this->storageKey = $repository->generateStorageKey($file, $context);
@@ -154,12 +150,8 @@ class StoredFile
             throw new \RuntimeException('No storage key has been generated!');
         }
 
-        $this->createdAt = new \DateTime('now');
-
         $this->filename = $file->getFilename();
         $this->extension = $file->getExtension();
-
-        $this->alternatives = new ArrayCollection();
 
         if ($file instanceof File || $file instanceof Base64File) {
             $this->mimeType = $file->getMimeType();
@@ -169,7 +161,7 @@ class StoredFile
             $this->extension = $file->getClientOriginalExtension();
         }
 
-        if (isset($context['author'])) {
+        if (\is_string($context['author'] ?? null)) {
             $this->author = $context['author'];
         }
         if (isset($context['owner'])) {
@@ -178,68 +170,65 @@ class StoredFile
     }
 
     /**
-     * @param StoredFile $alternative
+     * @return Collection<int, StoredFile>
      */
-    public function addAlternative(StoredFile $alternative)
+    public function getAlternatives(): Collection
     {
-        $this->alternatives->add($alternative);
+        if (null === $this->alternatives) {
+            $this->alternatives = new ArrayCollection();
+        }
+
+        return $this->alternatives;
+    }
+
+    public function addAlternative(StoredFile $alternative): void
+    {
+        $this->getAlternatives()->add($alternative);
         $alternative->setAlternativeOf($this);
     }
 
-    /**
-     * @return StoredFile
-     */
-    public function getAlternativeOf()
+    public function getAlternativeOf(): ?StoredFile
     {
         return $this->alternativeOf;
     }
 
-    /**
-     * @param mixed $alternativeOf
-     */
-    public function setAlternativeOf(StoredFile $alternativeOf = null)
+    public function setAlternativeOf(?StoredFile $alternativeOf = null): void
     {
         $this->alternativeOf = $alternativeOf;
     }
 
-    /**
-     * @return StoredFile[]
-     */
-    public function getAlternatives()
-    {
-        return $this->alternatives;
-    }
-
-    /**
-     * @param ContainerInterface $container
-     */
-    public function init(ContainerInterface $container)
+    public function init(ContainerInterface $container): void
     {
         $this->container = $container;
     }
 
-    /**
-     * @return string
-     */
-    public function getUrl($type = RouterInterface::NETWORK_PATH)
+    public function getUrl(int $type = RouterInterface::NETWORK_PATH): string
     {
         $urlGenerator = null;
+
+        if (!$this->container) {
+            throw new \RuntimeException('container not injected, call init method');
+        }
+
+        /** @var string $defaultUrlGenerator */
         $defaultUrlGenerator = $this->container->getParameter(
             ModeraFileRepositoryExtension::CONFIG_KEY.'.default_url_generator'
         );
 
+        /** @var array<string, string> $urlGenerators */
         $urlGenerators = $this->container->getParameter(
             ModeraFileRepositoryExtension::CONFIG_KEY.'.url_generators'
         );
 
+        /** @var array{'filesystem': string} $config */
         $config = $this->getRepository()->getConfig();
-        if (isset($urlGenerators[$config['filesystem']])) {
-            /* @var UrlGeneratorInterface $urlGenerator */
+        if (\is_string($urlGenerators[$config['filesystem']] ?? null)) {
+            /** @var UrlGeneratorInterface $urlGenerator */
             $urlGenerator = $this->container->get($urlGenerators[$config['filesystem']]);
         }
 
         if (!$urlGenerator instanceof UrlGeneratorInterface) {
-            /* @var UrlGeneratorInterface $urlGenerator */
+            /** @var UrlGeneratorInterface $urlGenerator */
             $urlGenerator = $this->container->get($defaultUrlGenerator);
         }
 
@@ -248,17 +237,15 @@ class StoredFile
 
     /**
      * @deprecated Use native ::class property
-     *
-     * @return string
      */
-    public static function clazz()
+    public static function clazz(): string
     {
-        @trigger_error(sprintf(
+        @\trigger_error(\sprintf(
             'The "%s()" method is deprecated. Use native ::class property.',
             __METHOD__
         ), \E_USER_DEPRECATED);
 
-        return get_called_class();
+        return \get_called_class();
     }
 
     /**
@@ -268,8 +255,12 @@ class StoredFile
      *
      * @ORM\PreRemove
      */
-    public function onRemove()
+    public function onRemove(): void
     {
+        if (!$this->repository || !$this->storageKey) {
+            return;
+        }
+
         try {
             $this->repository->getFilesystem()->delete($this->storageKey);
         } catch (FileNotFound $e) {
@@ -279,120 +270,103 @@ class StoredFile
         }
     }
 
-    /**
-     * @return string
-     */
-    public function getContents()
+    public function getContents(): string
     {
+        if (!$this->repository || !$this->storageKey) {
+            return '';
+        }
+
         return $this->repository->getFilesystem()->read($this->storageKey);
     }
 
-    /**
-     * @return int
-     */
-    public function getSize()
+    public function getSize(): int
     {
+        if (!$this->repository || !$this->storageKey) {
+            return 0;
+        }
+
         return $this->repository->getFilesystem()->size($this->storageKey);
     }
 
-    /**
-     * @return string
-     */
-    public function getChecksum()
+    public function getChecksum(): string
     {
+        if (!$this->repository || !$this->storageKey) {
+            return '';
+        }
+
         return $this->repository->getFilesystem()->checksum($this->storageKey);
     }
 
     /**
-     * @param array $meta
+     * @param array<string, mixed> $meta
      */
-    public function mergeMeta(array $meta)
+    public function mergeMeta(array $meta): void
     {
-        $this->setMeta(array_merge($this->getMeta(), $meta));
+        $this->setMeta(\array_merge($this->getMeta(), $meta));
     }
 
-    /**
-     * @return mixed
-     */
-    public function getAuthor()
+    public function getAuthor(): ?string
     {
         return $this->author;
     }
 
-    /**
-     * @param \DateTime $date
-     */
-    public function setCreatedAt(\DateTime $date)
+    public function setCreatedAt(\DateTimeInterface $date): void
     {
         $this->createdAt = $date;
     }
 
-    /**
-     * @return \DateTime
-     */
-    public function getCreatedAt()
+    public function getCreatedAt(): \DateTimeInterface
     {
+        if (!$this->createdAt) {
+            $this->createdAt = new \DateTime('now');
+        }
+
         return $this->createdAt;
     }
 
-    /**
-     * @return string
-     */
-    public function getExtension()
+    public function getExtension(): ?string
     {
         return $this->extension;
     }
 
-    /**
-     * @param string $filename
-     */
-    public function setFilename($filename)
+    public function setFilename(string $filename): void
     {
         $this->filename = $filename;
     }
 
-    /**
-     * @return string
-     */
-    public function getFilename()
+    public function getFilename(): string
     {
-        return $this->filename;
+        return $this->filename ?? '';
     }
 
-    /**
-     * @return mixed
-     */
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
 
     /**
-     * @return mixed
+     * @return array<string, mixed>
      */
-    public function getMeta()
+    public function getMeta(): array
     {
         return $this->meta;
     }
 
     /**
-     * @param mixed $meta
+     * @param array<string, mixed> $meta
      */
-    public function setMeta(array $meta)
+    public function setMeta(array $meta): void
     {
         $this->meta = $meta;
     }
 
-    /**
-     * @return null|string
-     */
-    public function getMimeType()
+    public function getMimeType(): ?string
     {
         return $this->mimeType;
     }
 
     /**
-     * @return mixed
+     * @return mixed Mixed value
      */
     public function getOwner()
     {
@@ -400,73 +374,48 @@ class StoredFile
     }
 
     /**
-     * @return \Modera\FileRepositoryBundle\Entity\Repository
+     * @param mixed $owner Mixed value
      */
-    public function getRepository()
-    {
-        return $this->repository;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getStorageKey()
-    {
-        return $this->storageKey;
-    }
-
-    /**
-     * @since 2.56.0
-     *
-     * @param mixed $author
-     */
-    public function setAuthor($author)
-    {
-        $this->author = $author;
-    }
-
-    /**
-     * @since 2.56.0
-     *
-     * @param mixed $owner
-     */
-    public function setOwner($owner)
+    public function setOwner($owner): void
     {
         $this->owner = $owner;
     }
 
-    /**
-     * @since 2.56.0
-     *
-     * @param bool $ignoreMissingFileOnDelete
-     */
-    public function setIgnoreMissingFileOnDelete($ignoreMissingFileOnDelete)
+    public function getRepository(): Repository
+    {
+        if (!$this->repository) {
+            throw new \RuntimeException('repository not defined');
+        }
+
+        return $this->repository;
+    }
+
+    public function getStorageKey(): string
+    {
+        return $this->storageKey ?? '';
+    }
+
+    public function setAuthor(?string $author): void
+    {
+        $this->author = $author;
+    }
+
+    public function setIgnoreMissingFileOnDelete(bool $ignoreMissingFileOnDelete): void
     {
         $this->isMissingFileIgnoredOnDelete = $ignoreMissingFileOnDelete;
     }
 
-    /**
-     * @since 2.56.0
-     *
-     * @return bool
-     */
-    public function isMissingFileIgnoredOnDelete()
+    public function isMissingFileIgnoredOnDelete(): bool
     {
         return $this->isMissingFileIgnoredOnDelete;
     }
 
-    /**
-     * @param int $position
-     */
-    public function setPosition($position)
+    public function setPosition(int $position): void
     {
         $this->position = $position;
     }
 
-    /**
-     * @return int
-     */
-    public function getPosition()
+    public function getPosition(): int
     {
         return $this->position;
     }

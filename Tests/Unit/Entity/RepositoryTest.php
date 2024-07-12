@@ -14,29 +14,29 @@ class DummyInterceptor implements OperationInterceptorInterface
     /**
      * @var array
      */
-    public $beforePutInvocations = [];
+    public array $beforePutInvocations = [];
 
     /**
      * @var array
      */
-    public $onPutInvocations = [];
+    public array $onPutInvocations = [];
 
     /**
      * @var array
      */
-    public $afterPutInvocations = [];
+    public array $afterPutInvocations = [];
 
-    public function beforePut(\SplFileInfo $file, Repository $repository)
+    public function beforePut(\SplFileInfo $file, Repository $repository, array $context = []): void
     {
         $this->beforePutInvocations[] = [$file, $repository];
     }
 
-    public function onPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository)
+    public function onPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository, array $context = []): void
     {
         $this->onPutInvocations[] = [$storedFile, $file, $repository];
     }
 
-    public function afterPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository)
+    public function afterPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository, array $context = []): void
     {
         $this->afterPutInvocations[] = [$storedFile, $file, $repository];
     }

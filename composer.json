@@ -23,7 +23,6 @@
     "require-dev": {
         "phake/phake": "^4.0",
         "phpunit/phpunit": "^6.5",
-        "sergeil/aux-bundle": "^1.1",
         "modera/foundation-bundle": "^5.0"
     },
     "autoload": {

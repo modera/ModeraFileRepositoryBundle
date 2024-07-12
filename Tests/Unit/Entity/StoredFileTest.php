@@ -9,7 +9,7 @@ use Modera\FileRepositoryBundle\Entity\StoredFile;
 use Symfony\Component\Routing\RouterInterface;
 
 /**
- * @author Sergei Lissovski <sergei.lissovski@gmail.com>
+ * @author Sergei Lissovski <sergei.lissovski@modera.org>
  */
 class StoredFileTest extends \PHPUnit\Framework\TestCase
 {

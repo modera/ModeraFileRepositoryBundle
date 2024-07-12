@@ -2,12 +2,12 @@
 
 namespace Modera\FileRepositoryBundle\Repository;
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Gaufrette\Filesystem;
 use Modera\FileRepositoryBundle\Entity\Repository;
 use Modera\FileRepositoryBundle\Entity\StoredFile;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * @author    Sergei Lissovski <sergei.lissovski@modera.org>
@@ -15,55 +15,41 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class FileRepository
 {
-    /* @var EntityManager $em */
-    private $em;
+    private EntityManagerInterface $em;
 
-    /* @var ContainerInterface $container */
-    private $container;
+    private ContainerInterface $container;
 
-    /**
-     * @param ContainerInterface $container
-     */
     public function __construct(ContainerInterface $container)
     {
-        $this->em = $container->get('doctrine.orm.entity_manager');
         $this->container = $container;
+
+        /** @var EntityManagerInterface $em */
+        $em = $container->get('doctrine.orm.entity_manager');
+
+        $this->em = $em;
     }
 
-    /**
-     * @param string $name
-     *
-     * @return Repository|null
-     */
-    public function getRepository($name)
+    public function getRepository(string $name): ?Repository
     {
-        return $this->em->getRepository(Repository::class)->findOneBy(array(
+        return $this->em->getRepository(Repository::class)->findOneBy([
             'name' => $name,
-        ));
+        ]);
     }
 
-    /**
-     * @param string $name
-     *
-     * @return bool
-     */
-    public function repositoryExists($name)
+    public function repositoryExists(string $name): bool
     {
-        $q = $this->em->createQuery(sprintf('SELECT COUNT(e.id) FROM %s e WHERE e.name = ?0', Repository::class));
+        $q = $this->em->createQuery(\sprintf('SELECT COUNT(e.id) FROM %s e WHERE e.name = ?0', Repository::class));
         $q->setParameter(0, $name);
+        /** @var string $result */
+        $result = $q->getSingleScalarResult();
 
-        return $q->getSingleScalarResult() != 0;
+        return 0 !== \intval($result);
     }
 
     /**
-     * @param string $name
-     * @param array  $config For available options see Repository::$config
-     * @param string $label
-     * @param bool   $internal
-     *
-     * @return Repository
+     * @param array<mixed> $config For available options see Repository::$config
      */
-    public function createRepository($name, array $config, $label = null, $internal = false)
+    public function createRepository(string $name, array $config, ?string $label = null, bool $internal = false): Repository
     {
         $repository = new Repository($name, $config);
         $repository->setLabel($label);
@@ -77,15 +63,11 @@ class FileRepository
     }
 
     /**
+     * @param array<mixed> $context
+     *
      * @throws \RuntimeException
-     *
-     * @param string       $repositoryName
-     * @param \SplFileInfo $file
-     * @param array        $context
-     *
-     * @return \Modera\FileRepositoryBundle\Entity\StoredFile
      */
-    public function put($repositoryName, \SplFileInfo $file, array $context = array())
+    public function put(string $repositoryName, \SplFileInfo $file, array $context = []): StoredFile
     {
         $repository = $this->getRepository($repositoryName);
         if (!$repository) {
@@ -99,18 +81,18 @@ class FileRepository
         }
 
         $storedFile = null;
-        $overwrite = isset($config['overwrite_files']) ? $config['overwrite_files'] : false;
+        $overwrite = \is_bool($config['overwrite_files'] ?? null) ? $config['overwrite_files'] : false;
         if ($overwrite) {
             $filename = $file->getFilename();
             if ($file instanceof UploadedFile) {
                 $filename = $file->getClientOriginalName();
             }
 
-            /* @var StoredFile $storedFile */
-            $storedFile = $this->em->getRepository(StoredFile::class)->findOneBy(array(
+            /** @var ?StoredFile $storedFile */
+            $storedFile = $this->em->getRepository(StoredFile::class)->findOneBy([
                 'repository' => $repository->getId(),
                 'filename' => $filename,
-            ));
+            ]);
             if ($storedFile) {
                 $storedFile->setCreatedAt(new \DateTime('now'));
             } else {
@@ -122,11 +104,9 @@ class FileRepository
             $storedFile = $repository->createFile($file, $context);
         }
 
-        $contents = @file_get_contents($file->getPathname());
+        $contents = @\file_get_contents($file->getPathname());
         if (false === $contents) {
-            throw new \RuntimeException(sprintf(
-                'Unable to read contents of "%s" file!', $file->getPath()
-            ));
+            throw new \RuntimeException(\sprintf('Unable to read contents of "%s" file!', $file->getPath()));
         }
 
         if (!$this->isInterceptorDisabled($context, 'put')) {
@@ -135,7 +115,7 @@ class FileRepository
 
         $storageKey = $storedFile->getStorageKey();
 
-        /* @var Filesystem $fs */
+        /** @var Filesystem $fs */
         $fs = $repository->getFilesystem();
 
         // physically stored file
@@ -160,18 +140,15 @@ class FileRepository
     }
 
     /**
-     * @param array $context
-     * @param $type
-     *
-     * @return bool
+     * @param array<mixed> $context
      */
-    private function isInterceptorDisabled(array $context, $type)
+    private function isInterceptorDisabled(array $context, string $type): bool
     {
         if (isset($context['disable_interceptors'])) {
-            if (is_bool($context['disable_interceptors'])) {
+            if (\is_bool($context['disable_interceptors'])) {
                 return $context['disable_interceptors'];
-            } else {
-                return false !== array_search($type, $context['disable_interceptors']);
+            } elseif (\is_array($context['disable_interceptors'])) {
+                return false !== \array_search($type, $context['disable_interceptors']);
             }
         }
 
@@ -179,15 +156,12 @@ class FileRepository
     }
 
     /**
-     * @param array $context
-     * @param $type
-     *
-     * @return callable
+     * @param array<mixed> $context
      */
-    private function createInterceptorsFilter(array $context, $type)
+    private function createInterceptorsFilter(array $context, string $type): callable
     {
-        $key = strtolower($type).'_interceptor_filter';
-        if (isset($context[$key]) && is_callable($context[$key])) {
+        $key = \strtolower($type).'_interceptor_filter';
+        if (isset($context[$key]) && \is_callable($context[$key])) {
             return $context[$key];
         } else {
             return function () {

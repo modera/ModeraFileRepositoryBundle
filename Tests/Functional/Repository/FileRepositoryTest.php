@@ -7,7 +7,6 @@ use Modera\FileRepositoryBundle\Entity\Repository;
 use Modera\FileRepositoryBundle\Entity\StoredFile;
 use Modera\FileRepositoryBundle\Repository\FileRepository;
 use Modera\FoundationBundle\Testing\FunctionalTestCase;
-use Sli\AuxBundle\Util\Toolkit;
 use Symfony\Component\HttpFoundation\File\File;
 
 /**
@@ -18,33 +17,27 @@ class FileRepositoryTest extends FunctionalTestCase
 {
     private static $st;
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function doSetUpBeforeClass()
+    public static function doSetUpBeforeClass(): void
     {
         self::$st = new SchemaTool(self::$em);
-        self::$st->createSchema(array(
+        self::$st->createSchema([
             self::$em->getClassMetadata(Repository::class),
             self::$em->getClassMetadata(StoredFile::class),
-        ));
+        ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function doTearDownAfterClass()
+    public static function doTearDownAfterClass(): void
     {
-        self::$st->dropSchema(array(
+        self::$st->dropSchema([
             self::$em->getClassMetadata(Repository::class),
             self::$em->getClassMetadata(StoredFile::class),
-        ));
+        ]);
     }
 
     public function testHowWellItWorks()
     {
         /* @var FileRepository $fr */
-        $fr = self::$container->get('modera_file_repository.repository.file_repository');
+        $fr = self::getContainer()->get('modera_file_repository.repository.file_repository');
 
         $this->assertNull($fr->getRepository('dummy_repository'));
 
@@ -64,9 +57,14 @@ class FileRepositoryTest extends FunctionalTestCase
         $this->assertEquals('dummy_repository', $repository->getName());
         $this->assertEquals('My dummy repository', $repository->getLabel());
         $this->assertSame($repositoryConfig, $repository->getConfig());
+
+        $reflClass = new \ReflectionClass($repository);
+        $reflProp = $reflClass->getProperty('container');
+        $reflProp->setAccessible(true);
+
         $this->assertInstanceOf(
             'Symfony\Component\DependencyInjection\ContainerInterface',
-            Toolkit::getPropertyValue($repository, 'container')
+            $reflProp->getValue($repository)
         );
 
         // ---

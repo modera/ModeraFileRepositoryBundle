@@ -11,24 +11,15 @@ use Modera\FileRepositoryBundle\Entity\StoredFile;
  */
 class BaseOperationInterceptor implements OperationInterceptorInterface
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function beforePut(\SplFileInfo $file, Repository $repository)
+    public function beforePut(\SplFileInfo $file, Repository $repository, array $context = []): void
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function onPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository)
+    public function onPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository, array $context = []): void
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function afterPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository)
+    public function afterPut(StoredFile $storedFile, \SplFileInfo $file, Repository $repository, array $context = []): void
     {
     }
 }

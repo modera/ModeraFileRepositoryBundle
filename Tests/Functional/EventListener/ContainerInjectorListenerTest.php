@@ -5,31 +5,30 @@ namespace Modera\FileRepositoryBundle\Tests\Functional\EventListener;
 use Doctrine\ORM\Tools\SchemaTool;
 use Modera\FileRepositoryBundle\Entity\Repository;
 use Modera\FoundationBundle\Testing\FunctionalTestCase;
-use Sli\AuxBundle\Util\Toolkit;
 
 /**
- * @author Sergei Lissovski <sergei.lissovski@gmail.com>
+ * @author Sergei Lissovski <sergei.lissovski@modera.org>
  */
 class ContainerInjectorListenerTest extends FunctionalTestCase
 {
-    /* @var SchemaTool */
+    /**
+     * @var SchemaTool
+     */
     private static $st;
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function doSetUpBeforeClass()
+    public static function doSetUpBeforeClass(): void
     {
         self::$st = new SchemaTool(self::$em);
-        self::$st->createSchema(array(self::$em->getClassMetadata(Repository::class)));
+        self::$st->createSchema([
+            self::$em->getClassMetadata(Repository::class),
+        ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function doTearDownAfterClass()
+    public static function doTearDownAfterClass(): void
     {
-        self::$st->dropSchema(array(self::$em->getClassMetadata(Repository::class)));
+        self::$st->dropSchema([
+            self::$em->getClassMetadata(Repository::class),
+        ]);
     }
 
     public function testHowWellContainerIsInjected()
@@ -47,9 +46,13 @@ class ContainerInjectorListenerTest extends FunctionalTestCase
         /* @var Repository $repository */
         $repository = self::$em->getRepository(Repository::class)->find($repository->getId());
 
+        $reflClass = new \ReflectionClass($repository);
+        $reflProp = $reflClass->getProperty('container');
+        $reflProp->setAccessible(true);
+
         $this->assertInstanceOf(
             'Symfony\Component\DependencyInjection\ContainerInterface',
-            Toolkit::getPropertyValue($repository, 'container')
+            $reflProp->getValue($repository)
         );
     }
 }

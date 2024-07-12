@@ -38,36 +38,30 @@ class GenerateThumbnailsCommandTest extends FunctionalTestCase
      */
     private static $generator;
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function doSetUpBeforeClass()
+    public static function doSetUpBeforeClass(): void
     {
         self::$st = new SchemaTool(self::$em);
-        self::$st->createSchema(array(
+        self::$st->createSchema([
             self::$em->getClassMetadata(Repository::class),
             self::$em->getClassMetadata(StoredFile::class),
-        ));
+        ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function doTearDownAfterClass()
+    public static function doTearDownAfterClass(): void
     {
-        self::$st->dropSchema(array(
+        self::$st->dropSchema([
             self::$em->getClassMetadata(Repository::class),
             self::$em->getClassMetadata(StoredFile::class),
-        ));
+        ]);
     }
 
-    public function doSetUp()
+    public function doSetUp(): void
     {
         /* @var FileRepository $fr */
-        self::$fileRepository = self::$container->get('modera_file_repository.repository.file_repository');
+        self::$fileRepository = self::getContainer()->get('modera_file_repository.repository.file_repository');
 
         /* @var ThumbnailsGenerator $generator */
-        self::$generator = self::$container->get('modera_file_repository.interceptors.thumbnails_generator.thumbnails_generator');
+        self::$generator = self::getContainer()->get('modera_file_repository.interceptors.thumbnails_generator.thumbnails_generator');
 
         $repositoryConfig = array(
             'filesystem' => 'dummy_tmp_fs',
@@ -88,7 +82,7 @@ class GenerateThumbnailsCommandTest extends FunctionalTestCase
 
         self::$fileRepository->createRepository('dummy_repo1', $repositoryConfig, 'Bla bla');
 
-        $this->application = new Application(self::$container->get('kernel'));
+        $this->application = new Application(self::getContainer()->get('kernel'));
         $this->application->add(new GenerateThumbnailsCommand(self::$em, self::$fileRepository, self::$generator));
     }
 
@@ -109,7 +103,7 @@ class GenerateThumbnailsCommandTest extends FunctionalTestCase
 
     public function testExecute_dryRun()
     {
-        static::$fileRepository->put('dummy_repo1', new File(__DIR__.'/../../Fixtures/backend.png'));
+        $originalStoredFile = static::$fileRepository->put('dummy_repo1', new File(__DIR__.'/../../Fixtures/backend.png'));
 
         $commandName = 'modera:file-repository:generate-thumbnails';
         $command = $this->application->find('modera:file-repository:generate-thumbnails');
@@ -129,10 +123,11 @@ class GenerateThumbnailsCommandTest extends FunctionalTestCase
 +----+-------------+--------------------+---------------------+
 | ID | Filename    | Missing thumbnails | Existing thumbnails |
 +----+-------------+--------------------+---------------------+
-| 2  | backend.png | 100x100, 50x50     | 32x32, 215x285      |
+| {0}  | backend.png | 100x100, 50x50     | 32x32, 215x285      |
 +----+-------------+--------------------+---------------------+
 
 OUTPUT;
+        $expectedOutput = \str_replace('{0}', $originalStoredFile->getId(), $expectedOutput);
 
         $this->assertEquals($expectedOutput, $output);
     }
@@ -155,23 +150,34 @@ OUTPUT;
 
         $output = $commandTester->getDisplay();
 
+        /** @var Repository $repository */
+        $repository = self::$em->getRepository(Repository::class)->find($originalStoredFile1->getRepository()->getId());
+
+        $ids = [];
+        foreach ($repository->getFiles() as $file) {
+            if (!$file->getAlternativeOf()) {
+                $ids[] = $file->getId();
+            }
+        }
+
         $expectedOutput = <<<'OUTPUT'
- # Processing (5) backend.png
+ # Processing ({0}) backend.png
   * 100x100
   * 50x50
- # Processing (8) backend.png
+ # Processing ({1}) backend.png
   * 100x100
   * 50x50
 Interceptor is already has been registered before, skipping ...
 Thumbnails config updated for repository
 
 OUTPUT;
+        $expectedOutput = \str_replace(['{0}', '{1}'], $ids, $expectedOutput);
 
         $this->assertEquals($expectedOutput, $output);
 
-        /* @var StoredFile[] $firstAlternatives */
+        /** @var StoredFile[] $firstAlternatives */
         $firstAlternatives = self::$em->getRepository(StoredFile::class)->findBy(array(
-            'alternativeOf' => 5,
+            'alternativeOf' => $originalStoredFile1->getId(),
         ));
 
         $this->assertEquals(4, count($firstAlternatives));
@@ -179,8 +185,6 @@ OUTPUT;
         $this->assertValidAlternative('backend.png', 100, 100, $firstAlternatives[2]);
         $this->assertValidAlternative('backend.png', 50, 50, $firstAlternatives[3]);
 
-        /* @var Repository $repository */
-        $repository = self::$em->getRepository(Repository::class)->find($originalStoredFile1->getRepository()->getId());
         $repoConfig = $repository->getConfig();
 
         $this->assertArrayHasKey('interceptors', $repoConfig);
@@ -203,19 +207,20 @@ OUTPUT;
         $secondOutput = $commandTester->getDisplay();
 
         $expectedSecondOutput = <<<'OUTPUT'
- # Processing (5) backend.png
- # Processing (8) backend.png
+ # Processing ({0}) backend.png
+ # Processing ({1}) backend.png
 Interceptor is already has been registered before, skipping ...
 Repository already contains necessary thumbnails config, skipping ...
 
 OUTPUT;
+        $expectedSecondOutput = \str_replace(['{0}', '{1}'], $ids, $expectedSecondOutput);
 
         // 32x32 thumbnails must not have been generated again
         $this->assertEquals($secondOutput, $expectedSecondOutput);
 
         self::$em->clear();
 
-        /* @var Repository $repository */
+        /** @var Repository $repository */
         $repository = self::$em->getRepository(Repository::class)->find($originalStoredFile1->getRepository()->getId());
         $repoConfig = $repository->getConfig();
 
