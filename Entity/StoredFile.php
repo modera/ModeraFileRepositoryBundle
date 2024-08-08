@@ -169,6 +169,20 @@ class StoredFile
         }
     }
 
+    public function init(ContainerInterface $container): void
+    {
+        $this->container = $container;
+    }
+
+    private function getContainer(): ContainerInterface
+    {
+        if (!$this->container) {
+            throw new \RuntimeException('container not injected, call init method');
+        }
+
+        return $this->container;
+    }
+
     /**
      * @return Collection<int, StoredFile>
      */
@@ -197,26 +211,19 @@ class StoredFile
         $this->alternativeOf = $alternativeOf;
     }
 
-    public function init(ContainerInterface $container): void
-    {
-        $this->container = $container;
-    }
-
     public function getUrl(int $type = RouterInterface::NETWORK_PATH): string
     {
         $urlGenerator = null;
 
-        if (!$this->container) {
-            throw new \RuntimeException('container not injected, call init method');
-        }
+        $container = $this->getContainer();
 
         /** @var string $defaultUrlGenerator */
-        $defaultUrlGenerator = $this->container->getParameter(
+        $defaultUrlGenerator = $container->getParameter(
             ModeraFileRepositoryExtension::CONFIG_KEY.'.default_url_generator'
         );
 
         /** @var array<string, string> $urlGenerators */
-        $urlGenerators = $this->container->getParameter(
+        $urlGenerators = $container->getParameter(
             ModeraFileRepositoryExtension::CONFIG_KEY.'.url_generators'
         );
 
@@ -224,12 +231,12 @@ class StoredFile
         $config = $this->getRepository()->getConfig();
         if (\is_string($urlGenerators[$config['filesystem']] ?? null)) {
             /** @var UrlGeneratorInterface $urlGenerator */
-            $urlGenerator = $this->container->get($urlGenerators[$config['filesystem']]);
+            $urlGenerator = $container->get($urlGenerators[$config['filesystem']]);
         }
 
         if (!$urlGenerator instanceof UrlGeneratorInterface) {
             /** @var UrlGeneratorInterface $urlGenerator */
-            $urlGenerator = $this->container->get($defaultUrlGenerator);
+            $urlGenerator = $container->get($defaultUrlGenerator);
         }
 
         return $urlGenerator->generateUrl($this, $type);

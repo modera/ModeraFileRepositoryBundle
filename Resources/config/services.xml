@@ -70,7 +70,6 @@
         <service id="modera_file_repository.intercepting.mime_saver_interceptor"
                  class="Modera\FileRepositoryBundle\Intercepting\MimeSaverInterceptor"
                  public="true">
-
         </service>
 
         <service id="modera_file_repository.authoring.authoring_interceptor"
@@ -95,5 +94,20 @@
             <argument type="service" id="modera_file_repository.repository.file_repository" />
             <argument type="service" id="modera_file_repository.interceptors.thumbnails_generator.thumbnails_generator" />
         </service>
+
+        <service id="Modera\FileRepositoryBundle\Filesystem\FilesystemMap"
+                 class="Modera\FileRepositoryBundle\Filesystem\FilesystemMap"
+                 public="true">
+
+            <argument type="service" id="knp_gaufrette.filesystem_map" />
+        </service>
+
+        <service id="modera_file_repository.filesystem_map"
+                 alias="Modera\FileRepositoryBundle\Filesystem\FilesystemMap"
+                 public="true" />
+
+        <service id="Modera\FileRepositoryBundle\Filesystem\FilesystemMapInterface"
+                 alias="modera_file_repository.filesystem_map" />
+
     </services>
 </container>

@@ -6,8 +6,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gaufrette\Filesystem;
-use Gaufrette\FilesystemMapInterface;
 use Modera\FileRepositoryBundle\Exceptions\InvalidRepositoryConfig;
+use Modera\FileRepositoryBundle\Filesystem\FilesystemMapInterface;
 use Modera\FileRepositoryBundle\Intercepting\DefaultInterceptorsProvider;
 use Modera\FileRepositoryBundle\Intercepting\OperationInterceptorInterface;
 use Modera\FileRepositoryBundle\Repository\StorageKeyGeneratorInterface;
@@ -68,14 +68,14 @@ class Repository
      *
      * @ORM\OneToMany(targetEntity="StoredFile", mappedBy="repository", cascade={"PERSIST", "REMOVE"})
      */
-    private Collection $files;
+    private ?Collection $files = null;
 
     /**
      * @ORM\Column(name="internal", type="boolean")
      */
     private bool $internal = false;
 
-    private ContainerInterface $container;
+    private ?ContainerInterface $container = null;
 
     /**
      * @param array<mixed> $config
@@ -84,8 +84,24 @@ class Repository
     {
         $this->name = $name;
         $this->setConfig($config);
+        $this->getFiles();
+    }
 
-        $this->files = new ArrayCollection();
+    /**
+     * @private
+     */
+    public function init(ContainerInterface $container): void
+    {
+        $this->container = $container;
+    }
+
+    private function getContainer(): ContainerInterface
+    {
+        if (!$this->container) {
+            throw new \RuntimeException('container not injected, call init method');
+        }
+
+        return $this->container;
     }
 
     /**
@@ -94,7 +110,7 @@ class Repository
     private function getInterceptors(): array
     {
         /** @var DefaultInterceptorsProvider $provider */
-        $provider = $this->container->get('modera_file_repository.intercepting.interceptors_provider');
+        $provider = $this->getContainer()->get('modera_file_repository.intercepting.interceptors_provider');
 
         return $provider->getInterceptors($this);
     }
@@ -154,14 +170,6 @@ class Repository
     }
 
     /**
-     * @private
-     */
-    public function init(ContainerInterface $container): void
-    {
-        $this->container = $container;
-    }
-
-    /**
      * @deprecated Use native ::class property
      */
     public static function clazz(): string
@@ -177,7 +185,7 @@ class Repository
     public function getFilesystem(): Filesystem
     {
         /** @var FilesystemMapInterface $map */
-        $map = $this->container->get('knp_gaufrette.filesystem_map');
+        $map = $this->getContainer()->get('modera_file_repository.filesystem_map');
 
         /** @var string $filesystem */
         $filesystem = $this->config['filesystem'] ?? '';
@@ -197,7 +205,7 @@ class Repository
         $storageKeyGenerator = $this->config['storage_key_generator'] ?? '';
 
         /** @var StorageKeyGeneratorInterface $generator */
-        $generator = $this->container->get($storageKeyGenerator);
+        $generator = $this->getContainer()->get($storageKeyGenerator);
 
         return $generator->generateStorageKey($file, $context);
     }
@@ -208,8 +216,8 @@ class Repository
     public function createFile(\SplFileInfo $file, array $context = []): StoredFile
     {
         $result = new StoredFile($this, $file, $context);
-        $result->init($this->container);
-        $this->files->add($result);
+        $result->init($this->getContainer());
+        $this->getFiles()->add($result);
 
         return $result;
     }
@@ -280,6 +288,10 @@ class Repository
      */
     public function getFiles(): Collection
     {
+        if (null === $this->files) {
+            $this->files = new ArrayCollection();
+        }
+
         return $this->files;
     }
 

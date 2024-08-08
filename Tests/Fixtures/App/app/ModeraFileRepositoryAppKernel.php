@@ -13,11 +13,9 @@ class ModeraFileRepositoryAppKernel extends \Modera\FoundationBundle\Testing\Abs
             new Symfony\Bundle\SecurityBundle\SecurityBundle(),
             new Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
 
-            new Modera\FileRepositoryBundle\Tests\Fixtures\Bundle\ModeraDummyBundle(),
-
             new Knp\Bundle\GaufretteBundle\KnpGaufretteBundle(),
-
             new Modera\FileRepositoryBundle\ModeraFileRepositoryBundle(),
+            new Modera\FileRepositoryBundle\Tests\Fixtures\Bundle\ModeraDummyBundle(),
         );
     }
 }
