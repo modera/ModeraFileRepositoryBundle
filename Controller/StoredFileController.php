@@ -2,6 +2,7 @@
 
 namespace Modera\FileRepositoryBundle\Controller;
 
+use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectRepository;
 use Modera\FileRepositoryBundle\DependencyInjection\ModeraFileRepositoryExtension;
 use Modera\FileRepositoryBundle\Entity\StoredFile;
@@ -19,6 +20,14 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class StoredFileController extends Controller
 {
+    protected function getDoctrine(): ManagerRegistry
+    {
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = $this->getContainer()->get('doctrine');
+
+        return $doctrine;
+    }
+
     protected function getContainer(): ContainerInterface
     {
         /** @var ContainerInterface $container */
