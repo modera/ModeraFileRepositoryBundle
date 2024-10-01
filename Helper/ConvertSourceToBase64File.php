@@ -129,7 +129,7 @@ final class ConvertSourceToBase64File
             /** @var ?string[] $http_response_header */
             if (isset($http_response_header) && \is_array($http_response_header) && \count($http_response_header)) {
                 \preg_match('{HTTP\/\S*\s(\d{3})}', \array_shift($http_response_header), $matches);
-                $status = (int) $matches[1];
+                $status = (int) ($matches[1] ?? 0);
                 if (Response::HTTP_OK === $status) {
                     $headers = [];
                     foreach ($http_response_header as $value) {
